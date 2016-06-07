@@ -1,0 +1,39 @@
+.h5vwrapper{
+	position:relative;
+	display: inline-block;
+}
+.h5vwrapper video {
+	position:relative;
+	background-color: #000000;
+}
+.h5vcaption{
+	position:absolute;
+	width:100px;
+	height:20px;
+	background-color:#000000;
+	color:#ffffff;
+	font-size:12px;
+	font-family:Arial;
+	text-align:center;
+	border-radius:5px;
+	top:40px;
+	padding-top:5px;
+}
+.h5vskipbutton {
+	position:absolute;
+	height:20px;
+	background-color:#000000;
+	border-radius:5px;
+	border: 1px solid #FFFFFF;
+	bottom: 3em;
+	padding: 5px 5px 0;
+	right: 0px;
+}
+
+.h5vskipbutton, .h5vskipbutton a {
+	color:#ffffff;
+	font-size:12px;
+	font-family:Arial;
+	text-align:left;
+	text-decoration: none;
+}

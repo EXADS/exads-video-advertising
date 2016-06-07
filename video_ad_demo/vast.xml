@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VAST version="3.0">
+  <Ad id="1">
+    <InLine>
+      <AdSystem>ExoClick</AdSystem>
+      <AdTitle/>
+      <Creatives>
+        <Creative sequence="1" id="1">
+          <Linear skipoffset="00:00:05">
+            <TrackingEvents>
+                <Tracking event="progress" offset="00:00:01.000"><![CDATA[http://example.com/view.php?tracking_event=progress&progress=00:00:01.000&idzone=9999999]]></Tracking>
+                <Tracking event="progress" offset="00:00:02.000"><![CDATA[http://example.com/view.php?tracking_event=progress&progress=00:00:02.000&idzone=9999999]]></Tracking>
+                <Tracking event="progress" offset="00:00:05.000"><![CDATA[http://example.com/view.php?tracking_event=progress&progress=00:00:05.000&idzone=9999999]]></Tracking>
+                <Tracking event="progress" offset="00:00:09.000"><![CDATA[http://example.com/view.php?tracking_event=progress&progress=00:00:09.000&idzone=9999999]]></Tracking>
+                <Tracking event="complete"><![CDATA[http://example.com/view.php?tracking_event=complete&idzone=9999999]]></Tracking>
+            </TrackingEvents>
+            <VideoClicks>
+                <ClickThrough><![CDATA[https://www.exoclick.com/]]></ClickThrough>
+            </VideoClicks>
+            <MediaFiles>
+              <MediaFile delivery="progressive" type="video/mp4"><![CDATA[ExoClick.mp4]]></MediaFile>
+            </MediaFiles>
+          </Linear>
+        </Creative>
+      </Creatives>
+    </InLine>
+  </Ad>
+</VAST>
