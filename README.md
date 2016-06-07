@@ -5,7 +5,8 @@
 * Video Codec: H.264
 * Audio Codec MPEG-4 AAC
 
-## File Format
+
+## Log File Format
 
 ### video_views.log
 
