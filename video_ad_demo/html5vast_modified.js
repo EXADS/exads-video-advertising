@@ -8,7 +8,13 @@
 */
  
 	var obj_vast;
+	var video_player_ids = [];
+	
 	function html5vast(video_player_id, vast_url, options){
+		if (video_player_ids.indexOf(video_player_id) === -1) {
+			video_player_ids.push(video_player_id);
+		}
+		
 		var video_player = document.getElementById(video_player_id);
 		
 		//Default options
@@ -29,15 +35,36 @@
 		wrapper_div.className = 'h5vwrapper';
 		wrapper_div.id = 'h5vwrapper_'+video_player_id;
 		video_player.parentNode.insertBefore(wrapper_div,video_player);
-		wrapper_div.appendChild(video_player);				
+		wrapper_div.appendChild(video_player);
+
+		video_player.addEventListener('webkitfullscreenchange', recalculateAdDimensions, false);
+		video_player.addEventListener('fullscreenchange', recalculateAdDimensions, false);
 		
 		
 		obj_vast = h5vReadFile(vast_url,html5vast_options);
-		//alert(obj_vast.media_file);
+		
 		h5vPreRoll(video_player_id, html5vast_options);
-		
-		
-	}		
+	}
+	
+	document.onfullscreenchange = function ( event ) { 
+		recalculateAdDimensions();
+	};
+	
+	document.onmozfullscreenchange = function ( event ) { 
+		recalculateAdDimensions();
+	};
+	
+	function recalculateAdDimensions()
+	{
+		for (var i = 0; i < video_player_ids.length; i++) {
+			video_player_id = video_player_ids[i];
+			
+			var video_player = document.getElementById(video_player_id);
+			var caption_div = document.getElementById('h5vcaption_'+video_player_id);
+			
+			caption_div.style.left = (video_player.offsetWidth / 2) - (document.getElementsByClassName("h5vcaption")[0].offsetWidth / 2) + 'px';
+		}
+	}
 	
 	//Parse VAST XML
 	function h5vReadFile(vast_url, options){
@@ -449,7 +476,7 @@
 		
 		//Create the skip button div
 		var skip_div = document.createElement('div');
-		skip_div.className = 'h5vskipbutton';
+		skip_div.className = 'h5vskipbutton h5vskipbutton_disabled';
 		skip_div.id = 'h5vskipbutton_' + video_player_id;
 		
 		wrapper_div.appendChild(skip_div);
@@ -473,6 +500,9 @@
 				btn.innerHTML = '<a href="javascript:;" onclick="h5vPressSkipButton(\'' + button_id + '\', \'' + video_player_id + '\');">'
 					+ click_label
 					+ '</a>';
+				
+				//removes the CSS class for a disabled button
+				btn.className = btn.className.replace(/\bh5vskipbutton_disabled\b/,'');
 			}
 			
 		} else {
