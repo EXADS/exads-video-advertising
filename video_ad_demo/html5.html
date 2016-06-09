@@ -23,7 +23,7 @@
 			
 			<div class="demo_container clearfix">
 				<div class="demo_container_left">
-					<video id='test-video' controls style="width: 640px; height: 480px;">
+					<video id='test-video' controls style="width: 640px; height: 480px;" onclick="this.setAttribute ('onclick', null); this.paused ? this.play() : this.pause();">
 						<source src='vid.mp4' type='video/mp4' />		
 					</video>
 				</div>
