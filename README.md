@@ -18,3 +18,6 @@ Alternatively, if the web page uses jwPlayer 6+ and there is a single player ins
 ```
 <script type="text/javascript" src="http://syndication.exoclick.com/splash.php?type=18&idzone=0000000"></script>
 ```
+
+## Changelog
+* A full list of changes and updates can be found in the project [CHANGELOG](https://github.com/EXADS/exads-video-advertising/blob/master/CHANGELOG.md)
