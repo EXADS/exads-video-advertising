@@ -63,5 +63,11 @@ The advertiser can use the provided URL for setting the video player request and
 <script type="text/javascript" src="http://syndication.exoclick.com/instream-tag.php?idzone=0000000"></script>
 ```
 
+## FAQ
+##### I'm getting an empty VAST response, is this normal?
+Yes, this is normal. When there is no video ad to show, our ad-server replies with an empty VAST XML, as per the VAST 3.0 standard. In such cases, your video player should simply play the content video without an ad.
+
+We are not displaying a video ad on every single video play, so this behaviour is normal and to be expected.
+
 ## Changelog
 * A full list of changes and updates can be found in the project [CHANGELOG](https://github.com/EXADS/exads-video-advertising/blob/master/CHANGELOG.md)
