@@ -8,6 +8,7 @@
 */
  
 	var obj_vast;
+	var html5vast_options;
 	var video_player_ids = [];
 	
 	function html5vast(video_player_id, vast_url, options){
@@ -18,13 +19,17 @@
 		var video_player = document.getElementById(video_player_id);
 		
 		//Default options
-		var html5vast_options = {
+		html5vast_options = {
 			'media_type' : 'video/mp4',
 			'media_bitrate_min' : 200,
 			'media_bitrate_max' : 1200,
 			'ad_caption': 'Advertisement',
 			'skip_button_caption': 'Skip ad in [seconds]',
-			'skip_button_click_caption': 'Skip ad &#9193;'
+			'skip_button_click_caption': 'Skip ad &#9193;',
+			'loadedVastCallback': (function(){}),
+			'noVideoCallback': (function(){}),
+			'videoSkippedCallback': (function(){}),
+			'videoEndedCallback': (function(){})
 		};
 		for(var key in options){
 			html5vast_options[key] = options[key];
@@ -281,8 +286,13 @@
 				
 				if (typeof obj_vast.media_file !== 'undefined') {
 					h5vPreRoll(video_player_id, html5vast_options);
+				} else {
+					html5vast_options.noVideoCallback();
 				}
+			} else {
+				html5vast_options.noVideoCallback();
 			}
+			html5vast_options.loadedVastCallback();
 		};
 		
 		xmlHttpReq.open("GET",vast_url,true);
@@ -335,6 +345,7 @@
 				//On PreRoll End
 				var video_player_ended = function(event){
 					h5vVideoPlayerEnded(video_player, 'h5vskipbutton_' + video_player.id, prev_src);
+					html5vast_options.videoEndedCallback();
 					video_player.removeEventListener('ended', video_player_ended);
 				}
 				
@@ -527,6 +538,8 @@
 	
 	function h5vPressSkipButton(button_id, video_player_id){
 		h5vRemoveSkipButton(button_id);
+		html5vast_options.videoEndedCallback();
+		html5vast_options.videoSkippedCallback();
 		h5vVideoPlayerEnded(document.getElementById(video_player_id), button_id, h5vGetCurrentSrc(video_player_id));
 	}
 	
