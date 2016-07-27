@@ -58,10 +58,11 @@ When the Publisher generates the ad zone, the system presents 2 options for sett
 http://syndication.exoclick.com/splash.php?type=18&idzone=0000000
 ```
 The advertiser can use the provided URL for setting the video player request and display a VAST ad. The exact integration is specific to each video player, so the player documentation should be followed.
-* For a website using a single jwPlayer, an easier approach may be to use a javascript code block, provided by the ExoClick system, to automatically set the VAST tag to the player. The code block looks like this:
+* For a website using a single JW Player, an easier approach may be to use a javascript code block, provided by the ExoClick system, to automatically set the VAST tag to the player. The code block looks like this:
 ```
 <script type="text/javascript" src="http://syndication.exoclick.com/instream-tag.php?idzone=0000000"></script>
 ```
+**Note: The automatic integration is in a beta stage. If it does not work for you, you can proceed with the generic approach of integrating the VAST Tag by following the JW Player documentation.**
 
 ## FAQ
 ##### I'm getting an empty VAST response, is this normal?
