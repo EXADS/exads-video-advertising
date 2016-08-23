@@ -66,6 +66,7 @@ var vastPlayerClass = {
     lastFullscreenPlayer: '',
     notCloned: ['notCloned', 'instances', 'lastFullscreenPlayer', 'getInstanceById', 'vastOptions', 'displayOptions'],
     videoPlayerId: '',
+    originalSrc: '',
     
     getInstanceById: function(playerId) {
         for (var i = 0; i < this.instances.length; i++) {
@@ -307,7 +308,6 @@ var vastPlayerClass = {
     preRoll: function() {
         var player = this;
         var videoPlayerTag = document.getElementById(player.videoPlayerId);
-        var originalSrc = player.getCurrentSrc();
 
         var playVideoPlayer = function() {
 
@@ -339,14 +339,8 @@ var vastPlayerClass = {
             /**
              * Handles the ending of the Pre-Roll ad
              */
-            var videoPlayerEnd = function() {
-                player.videoPlayerEnded(originalSrc);
-                player.displayOptions.videoEndedCallback();
-                videoPlayerTag.removeEventListener('ended', videoPlayerEnd);
-            };
-
             videoPlayerTag.addEventListener('loadedmetadata', switchPlayerToVastMode);
-            videoPlayerTag.addEventListener('ended', videoPlayerEnd);
+            videoPlayerTag.addEventListener('ended', player.onVastAdEnded);
             videoPlayerTag.removeEventListener('play', playVideoPlayer);
         };
 
@@ -447,17 +441,21 @@ var vastPlayerClass = {
         videoPlayerTag.ontimeupdate = function() {videoPlayerTimeUpdate()};
     },
 
-    videoPlayerEnded: function(src) {
-        var videoPlayerTag = document.getElementById(this.videoPlayerId);
-        videoPlayerTag.src = src;
-        videoPlayerTag.load();
-        videoPlayerTag.play();
-        this.removeClickthrough();
-        this.removeSkipButton();
+    onVastAdEnded: function() {
+        //"this" is the HTML5 video tag, because it disptches the "ended" event
+        var player = vastPlayerClass.getInstanceById(this.id);
 
-        this.vastOptions.adFinished = true;
+        this.src = player.originalSrc;
+        this.load();
+        this.play();
 
-        videoPlayerTag.setAttribute('controls', 'controls');
+        player.removeClickthrough();
+        player.removeSkipButton();
+        player.vastOptions.adFinished = true;
+        player.displayOptions.videoEndedCallback();
+
+        this.removeEventListener('ended', player.onVastAdEnded);
+        this.setAttribute('controls', 'controls');
     },
 
     /**
@@ -511,7 +509,10 @@ var vastPlayerClass = {
         this.removeSkipButton();
         this.displayOptions.videoEndedCallback();
         this.displayOptions.videoSkippedCallback();
-        this.videoPlayerEnded(this.getCurrentSrc());
+
+        var event = document.createEvent('Event');
+        event.initEvent('ended', false, true);
+        document.getElementById(this.videoPlayerId).dispatchEvent(event);
     },
 
     removeSkipButton: function() {
@@ -595,6 +596,7 @@ var vastPlayerClass = {
         this.displayOptions = {};
         
         this.videoPlayerId = idVideoPlayer;
+        this.originalSrc = this.getCurrentSrc();
 
         var videoPlayer = document.getElementById(idVideoPlayer);
 
