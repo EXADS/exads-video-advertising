@@ -463,23 +463,27 @@ var vastPlayerClass = {
      * Adds a Skip Button
      */
     addSkipButton: function() {
+        var videoPlayerTag = document.getElementById(this.videoPlayerId);
+
         var divSkipButton = document.createElement('div');
         divSkipButton.id = 'skip_button_' + this.videoPlayerId;
         divSkipButton.className = 'skip_button skip_button_disabled';
+        divSkipButton.innerHTML = this.displayOptions.skipButtonCaption.replace('[seconds]', this.vastOptions.skipoffset);
 
         document.getElementById('vast_video_wrapper_' + this.videoPlayerId).appendChild(divSkipButton);
 
-        this.decreaseSkipOffset(this, this.vastOptions.skipoffset);
+        videoPlayerTag.addEventListener('timeupdate', this.decreaseSkipOffset, false);
     },
 
-    decreaseSkipOffset: function decreaseSkipOffset(player, seconds) {
-        var sec = parseInt(seconds, 10);
-
+    decreaseSkipOffset: function decreaseSkipOffset() {
+        //"this" is the HTML5 video tag, because it disptches the "ended" event
+        var videoPlayerTag = this;
+        var player = vastPlayerClass.getInstanceById(videoPlayerTag.id);
+        var sec = player.vastOptions.skipoffset - Math.floor(videoPlayerTag.currentTime);
         var btn = document.getElementById('skip_button_' + player.videoPlayerId);
-        var videoPlayerTag = document.getElementById(player.videoPlayerId);
 
         if (btn) {
-            if (sec >= 0) {
+            if (sec >= 1) {
                 //set the button label with the remaining seconds
                 btn.innerHTML = player.displayOptions.skipButtonCaption.replace('[seconds]', sec);
 
@@ -491,18 +495,12 @@ var vastPlayerClass = {
 
                 //removes the CSS class for a disabled button
                 btn.className = btn.className.replace(/\bskip_button_disabled\b/,'');
+
+                videoPlayerTag.removeEventListener('timeupdate', player.decreaseSkipOffset);
             }
-
-            sec = player.vastOptions.skipoffset - Math.floor(videoPlayerTag.currentTime);
-
         } else {
-            sec = -1;
-        }
-
-        if (sec >= -1) {
-            setTimeout(function () {
-                decreaseSkipOffset(player, sec);
-            }, 100);
+            sec = 0;
+            videoPlayerTag.removeEventListener('timeupdate', videoPlayerTag.decreaseSkipOffset);
         }
     },
 
