@@ -65,9 +65,7 @@ var vastPlayerClass = {
     instances: [],
     lastFullscreenPlayer: '',
     notCloned: ['notCloned', 'instances', 'lastFullscreenPlayer', 'getInstanceById', 'vastOptions', 'displayOptions'],
-    videoPlayerId: '',
-    originalSrc: '',
-    
+
     getInstanceById: function(playerId) {
         for (var i = 0; i < this.instances.length; i++) {
             if (this.instances[i].videoPlayerId == playerId) {
@@ -328,6 +326,8 @@ var vastPlayerClass = {
 
                 videoPlayerTag.removeAttribute("controls"); //Remove Controls
 
+                player.isCurrentlyPlayingAd = true;
+
                 videoPlayerTag.play();
 
                 //Announce the impressions
@@ -437,8 +437,6 @@ var vastPlayerClass = {
 
         videoPlayerTag.addEventListener('play', playVideoPlayer);
         videoPlayerTag.addEventListener('timeupdate', videoPlayerTimeUpdate);
-
-        videoPlayerTag.ontimeupdate = function() {videoPlayerTimeUpdate()};
     },
 
     onVastAdEnded: function() {
@@ -446,8 +444,11 @@ var vastPlayerClass = {
         var player = vastPlayerClass.getInstanceById(this.id);
 
         this.src = player.originalSrc;
+
         this.load();
         this.play();
+
+        player.isCurrentlyPlayingAd = false;
 
         player.removeClickthrough();
         player.removeSkipButton();
@@ -593,10 +594,12 @@ var vastPlayerClass = {
             tracking:     [],
             stopTracking: []
         };
+
         this.displayOptions = {};
         
-        this.videoPlayerId = idVideoPlayer;
-        this.originalSrc = this.getCurrentSrc();
+        this.videoPlayerId        = idVideoPlayer;
+        this.originalSrc          = this.getCurrentSrc();
+        this.isCurrentlyPlayingAd = false;
 
         var videoPlayer = document.getElementById(idVideoPlayer);
 
