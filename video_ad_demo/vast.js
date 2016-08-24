@@ -589,6 +589,35 @@ var vastPlayerClass = {
         return false;
     },
 
+    onRecentWaiting: function() {
+        //"this" is the HTML5 video tag, because it disptches the "ended" event
+        var player = vastPlayerClass.getInstanceById(this.id);
+
+        player.recentWaiting = true;
+
+        setTimeout(function () {
+            player.recentWaiting = false;
+        }, 1000);
+    },
+
+    /**
+     * Dispatches a custom pause event which is not present when seeking.
+     */
+    onVastPlayerPause: function() {
+        //"this" is the HTML5 video tag, because it disptches the "ended" event
+        var videoPlayerTag = this;
+
+        setTimeout(function () {
+            var player = vastPlayerClass.getInstanceById(videoPlayerTag.id);
+
+            if (!player.recentWaiting) {
+                var event = document.createEvent('CustomEvent');
+                event.initEvent('vastplayerpause', false, true);
+                videoPlayerTag.dispatchEvent(event);
+            }
+        }, 100);
+    },
+
     init: function(idVideoPlayer, vastTag, options) {
         this.vastOptions = {
             tracking:     [],
@@ -600,6 +629,7 @@ var vastPlayerClass = {
         this.videoPlayerId        = idVideoPlayer;
         this.originalSrc          = this.getCurrentSrc();
         this.isCurrentlyPlayingAd = false;
+        this.recentWaiting        = false;
 
         var videoPlayer = document.getElementById(idVideoPlayer);
 
@@ -626,6 +656,8 @@ var vastPlayerClass = {
 
         videoPlayer.addEventListener('webkitfullscreenchange', this.recalculateAdDimensions, false);
         videoPlayer.addEventListener('fullscreenchange', this.recalculateAdDimensions, false);
+        videoPlayer.addEventListener('waiting', this.onRecentWaiting, false);
+        videoPlayer.addEventListener('pause', this.onVastPlayerPause, false);
 
         this.parseVastTag(vastTag);
     }
