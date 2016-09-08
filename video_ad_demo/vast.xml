@@ -8,7 +8,7 @@
       <Impression id="example2"><![CDATA[http://example.com/view2.php?tracking_event=impression&idzone=9999999]]></Impression>
       <Creatives>
         <Creative sequence="1" id="1">
-          <Linear skipoffset="00:00:05">
+          <Linear skipoffset="00:00:03">
             <TrackingEvents>
                 <Tracking event="progress" offset="00:00:01.000"><![CDATA[http://example.com/view.php?tracking_event=progress&progress=00:00:01.000&idzone=9999999]]></Tracking>
                 <Tracking event="progress" offset="00:00:02.000"><![CDATA[http://example.com/view.php?tracking_event=progress&progress=00:00:02.000&idzone=9999999]]></Tracking>

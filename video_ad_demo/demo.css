@@ -55,6 +55,13 @@ header div.header_main {
 	text-align: left;
 }
 
+.demo_container .demo_container_right h3 {
+    display: inline-block;
+    margin: 35px 20px 10px;
+    color: #1aab1c;
+    font-weight: 300;
+}
+
 .demo_container .demo_container_right ul {
 	display: table-cell;
     min-width: 400px;

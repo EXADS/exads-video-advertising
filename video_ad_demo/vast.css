@@ -5,6 +5,7 @@
 .vast_video_wrapper video {
 	position:relative;
 	background-color: #000000;
+    display: block;
 }
 .skip_button {
 	position:absolute;
