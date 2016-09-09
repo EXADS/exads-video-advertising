@@ -1,0 +1,186 @@
+.vast_controls_container {
+    color: white;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    height: 24px;
+    z-index: 1;
+    visibility: hidden;
+    opacity: 0;
+    -webkit-transition: visibility 0.5s, opacity 0.5s; /* Safari */
+    transition: visibility 0.5s, opacity 0.5s;
+}
+
+.vast_video_wrapper:hover .vast_controls_container {
+    visibility: visible;
+    opacity: 1;
+}
+
+.vast_video_wrapper.pseudo_fullscreen {
+    width: 100% !important;
+    height: 100% !important;
+    top: 0;
+    left: 0;
+    position: absolute;
+    z-index: 99999;
+}
+
+.vast_video_wrapper:-webkit-full-screen {
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute;
+}
+
+.vast_controls_container .vast_controls_left {
+    float: left;
+    width: 24px;
+}
+
+.vast_controls_container i {
+    width: 24px;
+    overflow: hidden; /*IE 9*/
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.vast_controls_container .vast_controls_right {
+    float: right;
+    width: 150px;
+}
+
+.vast_controls_container .vast_controls_left,
+.vast_controls_container .vast_controls_right {
+    height: 24px;
+}
+
+.vast_controls_container .vast_controls_progress_container {
+    height: 24px;
+    position: absolute;
+    left: 35px;
+    right: 160px;
+    z-index: 2;
+}
+
+.vast_controls_container .vast_controls_progress_container .vast_controls_progress {
+    position: absolute;
+    top: 10px;
+    width: 100%;
+    height: 4px;
+    background-color: #606060;
+    border-radius: 2px;
+    z-index: 3;
+}
+
+.vast_controls_container .vast_controls_progress_container .vast_controls_progress .vast_controls_currentprogress {
+    top: 0px;
+    left: 0px;
+    z-index: 4;
+    width: 0px;
+}
+
+.vast_controls_container .vast_controls_progress_container .vast_controls_progress,
+.vast_controls_container .vast_controls_progress_container .vast_controls_progress .vast_controls_currentprogress {
+    position: absolute;
+    height: 4px;
+    border-radius: 2px;
+}
+
+.vast_controls_container .vast_controls_progress_container.vast_slider .vast_controls_progress .vast_controls_currentprogress,
+.vast_controls_container .vast_controls_progress_container.vast_slider .vast_controls_progress .vast_controls_currentprogress .vast_controls_currentpos {
+    background-color: #FF0000;
+}
+
+.vast_controls_container .vast_controls_progress_container.vast_ad_slider .vast_controls_progress .vast_controls_currentprogress {
+    background-color: #FFFF00;
+}
+
+.vast_controls_container .vast_controls_progress_container.vast_slider .vast_controls_progress .vast_controls_currentprogress .vast_controls_currentpos,
+.vast_controls_container .vast_controls_progress_container.vast_ad_slider .vast_controls_progress .vast_controls_currentprogress .vast_controls_currentpos {
+    opacity: 0;
+}
+
+.vast_controls_container .vast_controls_progress_container.vast_slider:hover .vast_controls_progress .vast_controls_currentprogress .vast_controls_currentpos {
+    opacity: 1;
+}
+
+.vast_controls_container .vast_controls_progress_container.vast_slider .vast_controls_progress .vast_controls_currentprogress .vast_controls_currentpos {
+    -webkit-transition: opacity 0.3s; /* Safari */
+    transition: opacity 0.3s;
+}
+
+.vast_controls_container .vast_controls_right .vast_control_volume_container {
+    position: relative;
+    height: 24px;
+    width: 80px;
+    margin: 0 5px;
+    z-index: 2;
+}
+
+.vast_controls_container .vast_controls_right .vast_control_volume_container .vast_control_volume {
+    position: relative;
+    height: 4px;
+    width: 100%;
+    margin-top: 10px;
+    border-radius: 2px;
+    background-color: #FFFFFF;
+    z-index: 3;
+}
+
+.vast_controls_container .vast_controls_right .vast_control_volume_container .vast_control_volume .vast_control_volume_currentpos {
+    background-color: #FFFFFF;
+}
+
+.vast_controls_container .vast_controls_progress_container .vast_controls_progress .vast_controls_currentpos {
+    right: -4px;
+    z-index: 5;
+}
+
+.vast_controls_container .vast_controls_right .vast_control_volume_container .vast_control_volume .vast_control_volume_currentpos,
+.vast_controls_container .vast_controls_progress_container .vast_controls_progress .vast_controls_currentpos {
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    top: -3px;
+    border-radius: 5px;
+}
+
+.vast_controls_container .vast_button {
+    border-radius: 2px;
+}
+
+.vast_controls_container .vast_button:not(.vast_button_disabled):hover {
+    background-color: #404040;
+}
+
+.vast_controls_container .vast_button_disabled:hover {
+    cursor: default;
+}
+
+.vast_controls_container .vast_button,
+.vast_controls_container .vast_slider {
+    cursor: pointer;
+}
+
+.vast_controls_container div i,
+.vast_controls_container div div {
+    display: block;
+}
+
+.vast_controls_container .vast_controls_left i,
+.vast_controls_container .vast_controls_left div {
+    float: left;
+}
+
+.vast_controls_container .vast_controls_right i,
+.vast_controls_container .vast_controls_right div {
+    float: right;
+}
+
+.vast_controls_container .vast_button_disabled {
+    color: #808080;
+    cursor: auto;
+}

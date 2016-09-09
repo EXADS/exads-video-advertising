@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+    <title>In-Stream Demo</title>
+	<!-- jwPlayer -->
+    <script src="https://content.jwplatform.com/libraries/V6NfEzT7.js"></script>
+    <link rel="stylesheet" href="demo.css" type="text/css"/>
+</head>
+<body>
+	<header>
+		<div class="header_main">
+			<div class="wrap clearfix">
+				<a href="https://www.exoclick.com/" class="top_logo">ExoClick - Leading Web & Mobile Ad Network</a>
+			</div>
+		</div>
+	</header>
+	<div class="main">
+		<div class="container_wrap clearfix">
+			<h1>EXADS In-stream Video Ad Live Demo</h1>
+			
+			<div class="demo_container clearfix">
+				<div class="demo_container_left">
+					<div id="my-video"></div>
+				</div>
+				<div class="demo_container_right">
+					<ul>
+						<li>VAST - Video Ad Serving Template.</li>
+						<li>Universal XML schema for serving ads to digital video players.</li>
+						<li>Works with popular video players.</li>
+						<li>Flash and HTML5 compatibility.</li>
+						<li>Configurable Skip button.</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+    jwplayer("my-video").setup({
+		file: "vid.mp4",
+        image: "jwplayer.jpg",
+        width: "640",
+        height: "480",
+        primary: "flash",
+        //primary: "html5",
+		advertising: {
+			client: "vast",
+			schedule: {
+				"myAds": {
+					"offset": "pre",
+					"tag": 'vast.xml'
+				}
+			}
+		}
+    });
+    </script>
+</body>
+</html>
