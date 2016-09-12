@@ -228,6 +228,28 @@ var vastPlayerClass = {
         }
     },
 
+    prepareVast: function() {
+        var player = this;
+
+        player.initialStart = true;
+        player.parseVastTag(player.vastOptions.vastTagUrl);
+    },
+
+    toggleLoader: function(showLoader) {
+        if (this.displayOptions.layout === 'browser') {
+            //The browser handles all the layout of the video tag
+            return;
+        }
+
+        var loaderDiv = document.getElementById('vast_video_loading_' + this.videoPlayerId);
+
+        if (showLoader) {
+            loaderDiv.style.display = 'table';
+        } else {
+            loaderDiv.style.display = 'none';
+        }
+    },
+
     /**
      * Parse the VAST Tag
      *
@@ -235,27 +257,33 @@ var vastPlayerClass = {
      */
     parseVastTag: function(vastTag) {
         var player = this;
+        var videoPlayerTag = document.getElementById(player.videoPlayerId);
 
         var xmlHttpReq;
         var xmlResponse;
 
-        if (window.XMLHttpRequest) {
-            xmlHttpReq = new XMLHttpRequest();
+        xmlHttpReq = new XMLHttpRequest();
 
-        } else {
-            //IE
-            xmlHttpReq = new ActiveXObject("Microsoft.XMLHTTP");
-        }
+        var playVideo = function() {
+            player.toggleLoader(false);
+            videoPlayerTag.play();
+        };
 
         xmlHttpReq.onreadystatechange = function() {
-            if (!(xmlHttpReq.readyState == 4 && xmlHttpReq.status == 200)) {
+            if ((xmlHttpReq.readyState === 4) && (xmlHttpReq.status !== 200)) {
+                //The response returned an error. Proceeding with the main video.
+                playVideo();
+                return;
+            }
+
+            if (!((xmlHttpReq.readyState === 4) && (xmlHttpReq.status === 200))) {
                 return;
             }
 
             xmlResponse = xmlHttpReq.responseXML;
             
             //Get impression tag
-            var impression = xmlResponse.getElementsByTagName("Impression");
+            var impression = xmlResponse.getElementsByTagName('Impression');
             if(impression != null) {
                 player.registerImpressionEvents(impression);
             }
@@ -265,20 +293,20 @@ var vastPlayerClass = {
             player.vastOptions.adFinished = false;
 
             //Get Creative
-            var creative = xmlResponse.getElementsByTagName("Creative");                
+            var creative = xmlResponse.getElementsByTagName('Creative');
 
             //Currently only 1 creative and 1 linear is supported
             if ((typeof creative !== 'undefined') && creative.length) {
-                var arrayCreativeLinears = creative[0].getElementsByTagName("Linear");
+                var arrayCreativeLinears = creative[0].getElementsByTagName('Linear');
 
                 if ((typeof arrayCreativeLinears !== 'undefined') && (arrayCreativeLinears != null) && arrayCreativeLinears.length) {
                     creativeLinear = arrayCreativeLinears[0];
 
                     //Extract the necessary data from the Linear node
-                    player.vastOptions.skipoffset       = player.convertTimeStringToSeconds(creativeLinear.getAttribute('skipoffset'));
+                    player.vastOptions.skipoffset      = player.convertTimeStringToSeconds(creativeLinear.getAttribute('skipoffset'));
                     player.vastOptions.clickthroughUrl = player.getClickThroughUrlFromLinear(creativeLinear);
-                    player.vastOptions.clicktracking    = player.getClickTrackingEvents(creativeLinear);
-                    player.vastOptions.duration         = player.getDurationFromLinear(creativeLinear);
+                    player.vastOptions.clicktracking   = player.getClickTrackingEvents(creativeLinear);
+                    player.vastOptions.duration        = player.getDurationFromLinear(creativeLinear);
                     player.vastOptions.mediaFile       = player.getMediaFileFromLinear(creativeLinear);
                     
                     player.registerTrackingEvents();
@@ -287,16 +315,23 @@ var vastPlayerClass = {
                 if (typeof player.vastOptions.mediaFile !== 'undefined') {
                     player.preRoll();
                 } else {
+                    //Play the main video
+                    playVideo();
                     player.displayOptions.noVastVideoCallback();
                 }
             } else {
+                //Play the main video
+                playVideo();
                 player.displayOptions.noVastVideoCallback();
             }
             player.displayOptions.vastLoadedCallback();
         };
 
+        player.toggleLoader(true);
+
         xmlHttpReq.open("GET", vastTag, true);
         xmlHttpReq.withCredentials = true;
+        xmlHttpReq.timeout = player.displayOptions.vastTimeout;
         xmlHttpReq.send();
     },
 
@@ -305,7 +340,6 @@ var vastPlayerClass = {
         var videoPlayerTag = document.getElementById(player.videoPlayerId);
 
         var playVideoPlayer = function() {
-
             //Load the PreRoll ad
             videoPlayerTag.src = player.vastOptions.mediaFile;
             videoPlayerTag.load();
@@ -333,6 +367,7 @@ var vastPlayerClass = {
 
                 player.isCurrentlyPlayingAd = true;
 
+                player.toggleLoader(false);
                 videoPlayerTag.play();
 
                 //Announce the impressions
@@ -346,7 +381,6 @@ var vastPlayerClass = {
              */
             videoPlayerTag.addEventListener('loadedmetadata', switchPlayerToVastMode);
             videoPlayerTag.addEventListener('ended', player.onVastAdEnded);
-            videoPlayerTag.removeEventListener('play', playVideoPlayer);
         };
 
         var trackSingleEvent = function(eventType, eventSubType) {
@@ -440,18 +474,19 @@ var vastPlayerClass = {
             }
         };
 
-        videoPlayerTag.addEventListener('play', playVideoPlayer);
+        playVideoPlayer();
+
         videoPlayerTag.addEventListener('timeupdate', videoPlayerTimeUpdate);
     },
 
-    onVastAdEnded: function() {
-        //"this" is the HTML5 video tag, because it disptches the "ended" event
-        var player = vastPlayerClass.getInstanceById(this.id);
+    switchToMainVideo: function() {
+        var player = this;
+        var videoPlayerTag = document.getElementById(player.videoPlayerId);
 
-        this.src = player.originalSrc;
+        videoPlayerTag.src = player.originalSrc;
 
-        this.load();
-        this.play();
+        videoPlayerTag.load();
+        videoPlayerTag.play();
 
         player.isCurrentlyPlayingAd = false;
 
@@ -468,11 +503,16 @@ var vastPlayerClass = {
             }
         }
 
-        this.removeEventListener('ended', player.onVastAdEnded);
+        videoPlayerTag.removeEventListener('ended', player.onVastAdEnded);
 
         if (player.displayOptions.layout === 'browser') {
-            this.setAttribute('controls', 'controls');
+            videoPlayerTag.setAttribute('controls', 'controls');
         }
+    },
+
+    onVastAdEnded: function() {
+        //"this" is the HTML5 video tag, because it disptches the "ended" event
+        vastPlayerClass.getInstanceById(this.id).switchToMainVideo();
     },
 
     /**
@@ -644,7 +684,8 @@ var vastPlayerClass = {
             play_arrow:      '&#xE037;',
             pause:           '&#xE034;',
             fullscreen:      '&#xE5D0;',
-            fullscreen_exit: '&#xE5D1;'
+            fullscreen_exit: '&#xE5D1;',
+            hourglass_empty: '&#xE88B;'
         };
     },
 
@@ -850,26 +891,28 @@ var vastPlayerClass = {
         }
     },
 
+    playPauseToggle: function(videoPlayerTag) {
+        var player = vastPlayerClass.getInstanceById(videoPlayerTag.id);
+
+        if (player.initialStart) {
+            if (videoPlayerTag.paused) {
+                videoPlayerTag.play();
+            } else {
+                videoPlayerTag.pause();
+            }
+        } else {
+            //trigger the loading of the VAST tag instead
+            player.prepareVast();
+        }
+    },
+
     setCustomControls: function() {
         var player = this;
         var videoPlayerTag = document.getElementById(this.videoPlayerId);
 
         //Set the Play/Pause behaviour
-        document.getElementById(this.videoPlayerId).addEventListener('click', function() {
-            if (videoPlayerTag.paused) {
-                videoPlayerTag.play();
-            } else {
-                videoPlayerTag.pause();
-            }
-        }, false);
-
-        document.getElementById(this.videoPlayerId + '_vast_control_playpause').addEventListener('click', function() {
-            if (videoPlayerTag.paused) {
-                videoPlayerTag.play();
-            } else {
-                videoPlayerTag.pause();
-            }
-        }, false);
+        document.getElementById(this.videoPlayerId).addEventListener('click', function() {player.playPauseToggle(videoPlayerTag);}, false);
+        document.getElementById(this.videoPlayerId + '_vast_control_playpause').addEventListener('click', function() {player.playPauseToggle(videoPlayerTag);}, false);
 
         document.getElementById(player.videoPlayerId).addEventListener('play', function() {
             player.controlPlayPauseToggle(player.videoPlayerId, true);
@@ -909,30 +952,39 @@ var vastPlayerClass = {
     },
 
     setDefaultLayout: function() {
+        var player = this;
+
         //Load the icon css
         vastPlayerClass.requestStylesheet('defaultLayoutIcons', vastPlayerClass.defaultIconUrl);
         vastPlayerClass.requestStylesheet('defaultControlsStylesheet', vastPlayerClass.defaultControlsStylesheet);
 
-        var videoPlayerTag = document.getElementById(this.videoPlayerId);
+        var videoPlayerTag = document.getElementById(player.videoPlayerId);
 
         //Remove the default Controls
         videoPlayerTag.removeAttribute('controls');
 
         var divVastControls = document.createElement('div');
-        divVastControls.id = this.videoPlayerId + '_vast_controls_container';
+        divVastControls.id = player.videoPlayerId + '_vast_controls_container';
         divVastControls.className = 'vast_controls_container';
-        divVastControls.innerHTML = this.generateCustomControlTags();
-
-        var player = this;
+        divVastControls.innerHTML = player.generateCustomControlTags();
 
         videoPlayerTag.parentNode.insertBefore(divVastControls, videoPlayerTag.nextSibling);
+
+        //Create the loading cover
+        var divLoading = document.createElement('div');
+        divLoading.className = 'vast_video_loading';
+        divLoading.id = 'vast_video_loading_' + player.videoPlayerId;
+        divLoading.style.display = 'none';
+        divLoading.innerHTML = '<i class="material-icons md-48">' + vastPlayerClass.controlMaterialIconsGetMappedIcon('hourglass_empty') + '</i>';
+
+        videoPlayerTag.parentNode.insertBefore(divLoading, videoPlayerTag.nextSibling);
 
         //Wait for the volume bar to be rendered
         setTimeout(function() {
             player.contolVolumebarUpdate(player.videoPlayerId);
         }, 100);
 
-        this.setCustomControls();
+        player.setCustomControls();
     },
 
     setLayout: function() {
@@ -972,24 +1024,29 @@ var vastPlayerClass = {
     },
 
     init: function(idVideoPlayer, vastTag, options) {
-        this.vastOptions = {
+        var player = this;
+
+        player.vastOptions = {
+            vastTagUrl:   vastTag,
             tracking:     [],
             stopTracking: []
         };
 
-        this.videoPlayerId        = idVideoPlayer;
-        this.originalSrc          = this.getCurrentSrc();
-        this.isCurrentlyPlayingAd = false;
-        this.recentWaiting        = false;
-        this.latestVolume         = 1;
-        this.currentVideoDuration = 0;
+        player.videoPlayerId        = idVideoPlayer;
+        player.originalSrc          = player.getCurrentSrc();
+        player.isCurrentlyPlayingAd = false;
+        player.recentWaiting        = false;
+        player.latestVolume         = 1;
+        player.currentVideoDuration = 0;
+        player.initialStart         = false;
 
         //Default options
-        this.displayOptions = {
+        player.displayOptions = {
             mediaType : 'video/mp4',//TODO: should be taken from the VAST Tag; consider removing it completely, since the supported format is browser-dependent
             skipButtonCaption: 'Skip ad in [seconds]',
             skipButtonClickCaption: 'Skip ad &#9193;',
             layout: 'default', //options: browser, default, custom
+            vastTimeout: 5000, //number of milliseconds before the VAST Tag call timeouts
             vastLoadedCallback: (function() {}),
             noVastVideoCallback: (function() {}),
             vastVideoSkippedCallback: (function() {}),
@@ -998,11 +1055,10 @@ var vastPlayerClass = {
 
         //Overriding the default options
         for (var key in options) {
-            this.displayOptions[key] = options[key];
+            player.displayOptions[key] = options[key];
         }
 
         var videoPlayer = document.getElementById(idVideoPlayer);
-        var player = this;
 
         //Create a Wrapper Div element
         var divVideoWrapper = document.createElement('div');
@@ -1018,27 +1074,25 @@ var vastPlayerClass = {
         videoPlayer.parentNode.insertBefore(divVideoWrapper, videoPlayer);
         divVideoWrapper.appendChild(videoPlayer);
 
-        videoPlayer.addEventListener('webkitfullscreenchange', this.recalculateAdDimensions, false);
-        videoPlayer.addEventListener('fullscreenchange', this.recalculateAdDimensions, false);
-        videoPlayer.addEventListener('waiting', this.onRecentWaiting, false);
-        videoPlayer.addEventListener('pause', this.onVastPlayerPause, false);
+        videoPlayer.addEventListener('webkitfullscreenchange', player.recalculateAdDimensions, false);
+        videoPlayer.addEventListener('fullscreenchange', player.recalculateAdDimensions, false);
+        videoPlayer.addEventListener('waiting', player.onRecentWaiting, false);
+        videoPlayer.addEventListener('pause', player.onVastPlayerPause, false);
         videoPlayer.addEventListener('durationchange', function() {player.currentVideoDuration = player.getCurrentVideoDuration();}, false);
 
         //Manually load the video duration if the video was loaded before adding the event listener
-        this.currentVideoDuration = this.getCurrentVideoDuration();
+        player.currentVideoDuration = player.getCurrentVideoDuration();
 
-        if (isNaN(this.currentVideoDuration)) {
-            this.currentVideoDuration = 0;
+        if (isNaN(player.currentVideoDuration)) {
+            player.currentVideoDuration = 0;
         }
 
-        this.setLayout();
+        player.setLayout();
 
         //Set the volume control state
-        this.latestVolume = videoPlayer.volume;
+        player.latestVolume = videoPlayer.volume;
 
         //Set the custom fullscreen behaviour
-        this.handleFullscreen();
-
-        this.parseVastTag(vastTag);
+        player.handleFullscreen();
     }
 };

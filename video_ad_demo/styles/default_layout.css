@@ -33,6 +33,58 @@
     position: absolute;
 }
 
+.vast_video_wrapper .vast_video_loading {
+    position: absolute;
+    display: table;
+    text-align: center;
+    content: '';
+    background: rgba(0,0,0, 0.5); /*partially transparent image*/
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: auto;
+    z-index: 10;
+}
+
+.vast_video_wrapper .vast_video_loading i {
+    font-size: 48px;
+    color: #b0b0b0;
+    display: table-cell;
+    vertical-align: middle;
+    cursor: default;
+    -webkit-animation: pulsate 1s ease-out;
+    -webkit-animation-iteration-count: infinite;
+    -moz-animation: pulsate 1s ease-out;
+    -moz-animation-iteration-count: infinite;
+    animation: pulsate 1s ease-out;
+    animation-iteration-count: infinite;
+    opacity: 1;
+    background-color: transparent;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+@-webkit-keyframes pulsate {
+    0% {opacity: 0.0;}
+    50% {opacity: 1.0;}
+    100% {opacity: 0.0;}
+}
+
+@-moz-keyframes pulsate {
+    0% {opacity: 0.0;}
+    50% {opacity: 1.0;}
+    100% {opacity: 0.0;}
+}
+
+@keyframes pulsate {
+    0% {opacity: 0.0;}
+    50% {opacity: 1.0;}
+    100% {opacity: 0.0;}
+}
+
 .vast_controls_container .vast_controls_left {
     float: left;
     width: 24px;
