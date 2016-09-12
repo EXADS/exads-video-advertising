@@ -895,10 +895,12 @@ var vastPlayerClass = {
         var player = vastPlayerClass.getInstanceById(videoPlayerTag.id);
 
         if (player.initialStart) {
-            if (videoPlayerTag.paused) {
-                videoPlayerTag.play();
-            } else {
-                videoPlayerTag.pause();
+            if (player.displayOptions.layout !== 'browser') { //The original player play/pause toggling is managed by the browser
+                if (videoPlayerTag.paused) {
+                    videoPlayerTag.play();
+                } else {
+                    videoPlayerTag.pause();
+                }
             }
         } else {
             //trigger the loading of the VAST tag instead
@@ -998,6 +1000,10 @@ var vastPlayerClass = {
                 break;
 
             case 'browser':
+                var player = this;
+                var videoPlayerTag = document.getElementById(player.videoPlayerId);
+                videoPlayerTag.addEventListener('click', function() {console.log('test'); player.playPauseToggle(videoPlayerTag);}, false);
+                break;
             default:
                 break;
         }
