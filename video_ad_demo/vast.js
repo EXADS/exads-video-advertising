@@ -302,7 +302,10 @@ var vastPlayerClass = {
 
                 if ((xmlHttpReq.readyState === 4) && (xmlHttpReq.status !== 200)) {
                     //The response returned an error. Proceeding with the main video.
+                    videoPlayerTag.pause();
+                    videoPlayerTag.src = player.originalSrc;
                     playVideo();
+                    player.displayOptions.noVastVideoCallback();
                     return;
                 }
 
@@ -346,11 +349,15 @@ var vastPlayerClass = {
                         player.preRoll();
                     } else {
                         //Play the main video
+                        videoPlayerTag.pause();
+                        videoPlayerTag.src = player.originalSrc;
                         playVideo();
                         player.displayOptions.noVastVideoCallback();
                     }
                 } else {
                     //Play the main video
+                    videoPlayerTag.pause();
+                    videoPlayerTag.src = player.originalSrc;
                     playVideo();
                     player.displayOptions.noVastVideoCallback();
                 }
@@ -365,6 +372,7 @@ var vastPlayerClass = {
 
         var playVideoPlayer = function() {
             //Load the PreRoll ad
+            videoPlayerTag.pause();
             videoPlayerTag.src = player.vastOptions.mediaFile;
             videoPlayerTag.load();
 
@@ -441,8 +449,9 @@ var vastPlayerClass = {
 
                 case 'impression':
                     if (
-                        (player.vastOptions.impression !== null)
-                        && (typeof player.vastOptions.impression.length !== 'unknown')
+                        (typeof player.vastOptions.impression !== 'undefined') &&
+                        (player.vastOptions.impression !== null) &&
+                        (typeof player.vastOptions.impression.length !== 'unknown')
                     ) {
                         trackingUris = player.vastOptions.impression;
                     }
@@ -927,7 +936,12 @@ var vastPlayerClass = {
                 }
             }
         } else {
-            //trigger the loading of the VAST tag instead
+            //Workaround for Chrome Mobile - otherwise it blocks the subsequent
+            //play() command, because it considers it not being triggered by the user.
+            videoPlayerTag.src = 'blank.mp4';
+            videoPlayerTag.play();
+
+            //trigger the loading of the VAST Tag
             player.prepareVast();
         }
     },
