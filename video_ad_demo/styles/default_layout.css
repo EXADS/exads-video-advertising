@@ -31,6 +31,14 @@
     width: 100% !important;
     height: 100% !important;
     position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.vast_video_wrapper:-ms-fullscreen {
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute;
 }
 
 .vast_video_wrapper .vast_video_loading {
@@ -241,3 +249,66 @@
     color: #808080;
     cursor: auto;
 }
+
+/*Mobile Layout*/
+.vast_video_wrapper.mobile .vast_controls_container {
+    height: 48px;
+}
+
+.vast_video_wrapper.mobile .vast_controls_container .vast_controls_left,
+.vast_video_wrapper.mobile .vast_controls_container .vast_controls_right {
+    height: 48px;
+}
+
+.vast_video_wrapper.mobile .vast_controls_container .vast_controls_left {
+    width: 48px;
+}
+
+.vast_video_wrapper.mobile .vast_controls_container i {
+    width: 48px;
+    font-size: 48px;
+}
+
+.vast_video_wrapper.mobile .vast_controls_container .vast_controls_progress_container {
+    height: 48px;
+    left: 70px;
+    right: 208px;
+}
+
+.vast_video_wrapper.mobile .vast_controls_container .vast_controls_progress_container .vast_controls_progress,
+.vast_video_wrapper.mobile .vast_controls_container .vast_controls_progress_container .vast_controls_progress .vast_controls_currentprogress {
+    border-radius: 4px;
+    height: 8px;
+}
+
+.vast_video_wrapper.mobile .vast_controls_container .vast_controls_progress_container .vast_controls_progress {
+    border-radius: 4px;
+    height: 8px;
+    top: 20px;
+}
+
+.vast_video_wrapper.mobile .vast_controls_container .vast_controls_right .vast_control_volume_container .vast_control_volume .vast_control_volume_currentpos,
+.vast_video_wrapper.mobile .vast_controls_container .vast_controls_progress_container .vast_controls_progress .vast_controls_currentpos {
+    border-radius: 10px;
+    height: 20px;
+    top: -6px;
+    width: 20px;
+}
+
+.vast_video_wrapper.mobile .vast_controls_container .vast_controls_right {
+    width: 198px;
+}
+
+.vast_video_wrapper.mobile .vast_controls_container .vast_controls_right .vast_control_volume_container {
+    height: 48px;
+    margin: 0 10px;
+}
+
+.vast_video_wrapper.mobile .vast_controls_container .vast_controls_right .vast_control_volume_container .vast_control_volume {
+    border-radius: 4px;
+    height: 8px;
+    margin-top: 20px;
+}
+
+
+

@@ -31,7 +31,7 @@ var vastPlayerClass = {
     instances: [],
     notCloned: ['notCloned', 'defaultIconUrl', 'defaultControlsStylesheet',
         'instances', 'getInstanceById', 'requestStylesheet', 'reqiestScript',
-        'vastOptions', 'displayOptions', 'getClickedBarOffsetX',
+        'isTouchDevice', 'vastOptions', 'displayOptions', 'getClickedBarOffsetX',
         'controlMaterialIconsMapping', 'controlMaterialIconsGetMappedIcon'],
 
     getInstanceById: function(playerId) {
@@ -73,6 +73,11 @@ var vastPlayerClass = {
 
         // Fire the loading
         head.appendChild(script);
+    },
+
+    isTouchDevice: function() {
+        return !!('ontouchstart' in window        // works on most browsers
+            || navigator.maxTouchPoints);       // works on IE10/11 and Surface
     },
 
     getCurrentVideoDuration: function() {
@@ -625,7 +630,7 @@ var vastPlayerClass = {
             'style',
             'position: absolute; cursor: pointer; top: 0; left: 0; width: ' +
                     videoPlayerTag.offsetWidth + 'px; height: ' +
-                    (videoPlayerTag.offsetHeight) + 'px; border: 1px solid red;'
+                    (videoPlayerTag.offsetHeight) + 'px;'
         );
 
         divWrapper.appendChild(divClickThrough);
@@ -1277,6 +1282,9 @@ var vastPlayerClass = {
         //Create a Wrapper Div element
         var divVideoWrapper = document.createElement('div');
         divVideoWrapper.className = 'vast_video_wrapper';
+
+        divVideoWrapper.className = (vastPlayerClass.isTouchDevice() ? 'vast_video_wrapper mobile' : 'vast_video_wrapper');
+
         divVideoWrapper.id = 'vast_video_wrapper_' + idVideoPlayer;
 
         //Assign the height/width dimensions to the wrapper
