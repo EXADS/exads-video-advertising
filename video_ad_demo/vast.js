@@ -1156,9 +1156,20 @@ var vastPlayerClass = {
         player.setupThumbnailPreview();
     },
 
+    forceLayoutIfNeeded: function() {
+        var userAgent = window.navigator.userAgent;
+
+        //Force "browser" mode for Mobile Safari on iPhone
+        if (userAgent.match(/iPhone/i) && userAgent.match(/WebKit/i) && !userAgent.match(/CriOS/i)) {
+            this.displayOptions.layout = 'browser';
+        }
+    },
+
     setLayout: function() {
         var player = this;
         var videoPlayerTag = document.getElementById(player.videoPlayerId);
+
+        player.forceLayoutIfNeeded();
 
         //Mobile Safari - because it does not emit a click event on initial click of the video
         videoPlayerTag.addEventListener('play', player.initialPlay, false);
