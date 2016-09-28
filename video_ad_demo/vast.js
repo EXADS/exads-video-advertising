@@ -33,7 +33,7 @@ var vastPlayerClass = {
         'instances', 'getInstanceById', 'requestStylesheet', 'reqiestScript',
         'isTouchDevice', 'vastOptions', 'displayOptions', 'getEventOffsetX',
         'controlMaterialIconsMapping', 'controlMaterialIconsGetMappedIcon',
-        'toggleElementText'],
+        'toggleElementText', 'getMobileOs'],
 
     getInstanceById: function(playerId) {
         for (var i = 0; i < this.instances.length; i++) {
@@ -79,6 +79,56 @@ var vastPlayerClass = {
     isTouchDevice: function() {
         return !!('ontouchstart' in window        // works on most browsers
             || navigator.maxTouchPoints);       // works on IE10/11 and Surface
+    },
+
+    /**
+     * Distinguises iOS from Android devices and the OS version.
+     *
+     * @returns object
+     */
+    getMobileOs: function() {
+        var ua = navigator.userAgent;
+        var uaindex;
+
+        var result = {device: false, userOs: false, userOsMajor: false, userOsVer: false};
+
+        // determine OS
+        if (ua.match(/iPad/i)) {
+            result.device = 'iPad';
+            result.userOs = 'iOS';
+            uaindex = ua.indexOf('OS ');
+
+        } else if (ua.match(/iPhone/i)) {
+            result.device = 'iPhone';
+            result.userOs = 'iOS';
+            uaindex = ua.indexOf('OS ');
+
+        } else if (ua.match(/Android/i)) {
+            result.userOs = 'Android';
+            uaindex = ua.indexOf('Android ');
+
+        } else {
+            result.userOs = false;
+        }
+
+        // determine version
+        if (result.userOs === 'iOS' && (uaindex > -1)) {
+            var userOsTemp = ua.substr(uaindex + 3);
+            var indexOfEndOfVersion = userOsTemp.indexOf(' ');
+
+            if (indexOfEndOfVersion !== -1) {
+                result.userOs = userOsTemp.substring(0, userOsTemp.indexOf(' ')).replace(/_/g, '.');
+                result.userOsMajor = parseInt(result.userOs);
+            }
+
+        } else if (result.userOs === 'Android' && (uaindex > -1)) {
+            result.userOsVer = ua.substr(uaindex + 8, 3);
+
+        } else {
+            result.userOsVer = false;
+        }
+
+        return result;
     },
 
     getCurrentVideoDuration: function() {
@@ -637,19 +687,32 @@ var vastPlayerClass = {
         divWrapper.appendChild(divClickThrough);
 
         //Bind the Onclick event
+        var openClickthrough = function() {
+            window.open(player.vastOptions.clickthroughUrl);
+
+            //Tracking the Clickthorugh events
+            if (typeof player.vastOptions.clicktracking !== 'undefined') {
+                player.callUris(player.vastOptions.clicktracking);
+            }
+        };
+
         var clickthroughLayer = document.getElementById('vast_clickthrough_layer_' + player.videoPlayerId);
+        var deviceInfo = vastPlayerClass.getMobileOs();
+        var isIos9orLower = (deviceInfo.device === 'iPhone') && (deviceInfo.userOsMajor !== false) && (deviceInfo.userOsMajor <= 9);
 
         clickthroughLayer.onclick = function() {
             if (videoPlayerTag.paused) {
-                videoPlayerTag.play();
+                //On Mobile Safari on iPhones with iOS 9 or lower open the clickthrough only once
+                if (isIos9orLower && !player.suppressClickthrough) {
+                    openClickthrough();
+                    player.suppressClickthrough = true;
+
+                } else {
+                    videoPlayerTag.play();
+                }
 
             } else {
-                window.open(player.vastOptions.clickthroughUrl);
-
-                //Tracking the Clickthorugh events
-                if (typeof player.vastOptions.clicktracking !== 'undefined') {
-                    player.callUris(player.vastOptions.clicktracking);
-                }
+                openClickthrough();
             }
         };
     },
@@ -1379,8 +1442,31 @@ var vastPlayerClass = {
         }
     },
 
+    setupPlayerWrapper: function() {
+        var player = this;
+        var videoPlayer = document.getElementById(player.videoPlayerId);
+
+        //Create a Wrapper Div element
+        var divVideoWrapper = document.createElement('div');
+        divVideoWrapper.className = 'vast_video_wrapper';
+
+        divVideoWrapper.className = (vastPlayerClass.isTouchDevice() ? 'vast_video_wrapper mobile' : 'vast_video_wrapper');
+
+        divVideoWrapper.id = 'vast_video_wrapper_' + player.videoPlayerId;
+
+        //Assign the height/width dimensions to the wrapper
+        divVideoWrapper.style.height = videoPlayer.clientHeight + 'px';
+        divVideoWrapper.style.width = videoPlayer.clientWidth + 'px';
+        videoPlayer.style.height = '100%';
+        videoPlayer.style.width = '100%';
+
+        videoPlayer.parentNode.insertBefore(divVideoWrapper, videoPlayer);
+        divVideoWrapper.appendChild(videoPlayer);
+    },
+
     init: function(idVideoPlayer, vastTag, options) {
         var player = this;
+        var videoPlayer = document.getElementById(idVideoPlayer);
 
         player.vastOptions = {
             vastTagUrl:   vastTag,
@@ -1395,6 +1481,7 @@ var vastPlayerClass = {
         player.latestVolume         = 1;
         player.currentVideoDuration = 0;
         player.initialStart         = false;
+        player.suppressClickthrough = false;
         player.timelinePreviewData  = [];
 
         //Default options
@@ -1416,24 +1503,7 @@ var vastPlayerClass = {
             player.displayOptions[key] = options[key];
         }
 
-        var videoPlayer = document.getElementById(idVideoPlayer);
-
-        //Create a Wrapper Div element
-        var divVideoWrapper = document.createElement('div');
-        divVideoWrapper.className = 'vast_video_wrapper';
-
-        divVideoWrapper.className = (vastPlayerClass.isTouchDevice() ? 'vast_video_wrapper mobile' : 'vast_video_wrapper');
-
-        divVideoWrapper.id = 'vast_video_wrapper_' + idVideoPlayer;
-
-        //Assign the height/width dimensions to the wrapper
-        divVideoWrapper.style.height = videoPlayer.clientHeight + 'px';
-        divVideoWrapper.style.width = videoPlayer.clientWidth + 'px';
-        videoPlayer.style.height = '100%';
-        videoPlayer.style.width = '100%';
-
-        videoPlayer.parentNode.insertBefore(divVideoWrapper, videoPlayer);
-        divVideoWrapper.appendChild(videoPlayer);
+        player.setupPlayerWrapper();
 
         videoPlayer.addEventListener('webkitfullscreenchange', player.recalculateAdDimensions, false);
         videoPlayer.addEventListener('fullscreenchange', player.recalculateAdDimensions, false);
