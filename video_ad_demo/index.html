@@ -69,6 +69,10 @@
             'test-video',
             'vast.xml',
             {
+                timelinePreview: {
+                    file: 'thumbnails.vtt',
+                    type: 'VTT'
+                },
                 vastLoadedCallback: function() {console.log('vast loaded')},
                 noVastVideoCallback: function() {console.log('no vast')},
                 vastVideoSkippedCallback: function() {console.log('vast skipped')},

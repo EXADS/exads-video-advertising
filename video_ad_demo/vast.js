@@ -23,20 +23,21 @@ vastPlayer = function(idVideoPlayer, vastTag, options) {
     copy.init(idVideoPlayer, vastTag, options);
 
     return copy;
-}
+};
 
 var vastPlayerClass = {
     defaultIconUrl: '//fonts.googleapis.com/icon?family=Material+Icons',
     defaultControlsStylesheet: 'styles/default_layout.css',
     instances: [],
     notCloned: ['notCloned', 'defaultIconUrl', 'defaultControlsStylesheet',
-        'instances', 'getInstanceById', 'requestStylesheet', 'vastOptions',
-        'displayOptions', 'getClickedBarOffsetX', 'controlMaterialIconsMapping',
-        'controlMaterialIconsGetMappedIcon'],
+        'instances', 'getInstanceById', 'requestStylesheet', 'reqiestScript',
+        'isTouchDevice', 'vastOptions', 'displayOptions', 'getEventOffsetX',
+        'controlMaterialIconsMapping', 'controlMaterialIconsGetMappedIcon',
+        'toggleElementText', 'getMobileOs'],
 
     getInstanceById: function(playerId) {
         for (var i = 0; i < this.instances.length; i++) {
-            if (this.instances[i].videoPlayerId == playerId) {
+            if (this.instances[i].videoPlayerId === playerId) {
                 return this.instances[i];
             }
         }
@@ -57,6 +58,77 @@ var vastPlayerClass = {
 
             head.appendChild(link);
         }
+    },
+
+    requestScript: function(url, callback) {
+        // Adding the script tag to the head
+        var head = document.getElementsByTagName('head')[0];
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = url;
+
+        // Then bind the event to the callback function.
+        // There are several events for cross browser compatibility.
+        script.onreadystatechange = callback;
+        script.onload = callback;
+
+        // Fire the loading
+        head.appendChild(script);
+    },
+
+    isTouchDevice: function() {
+        return !!('ontouchstart' in window        // works on most browsers
+            || navigator.maxTouchPoints);       // works on IE10/11 and Surface
+    },
+
+    /**
+     * Distinguises iOS from Android devices and the OS version.
+     *
+     * @returns object
+     */
+    getMobileOs: function() {
+        var ua = navigator.userAgent;
+        var uaindex;
+
+        var result = {device: false, userOs: false, userOsMajor: false, userOsVer: false};
+
+        // determine OS
+        if (ua.match(/iPad/i)) {
+            result.device = 'iPad';
+            result.userOs = 'iOS';
+            uaindex = ua.indexOf('OS ');
+
+        } else if (ua.match(/iPhone/i)) {
+            result.device = 'iPhone';
+            result.userOs = 'iOS';
+            uaindex = ua.indexOf('OS ');
+
+        } else if (ua.match(/Android/i)) {
+            result.userOs = 'Android';
+            uaindex = ua.indexOf('Android ');
+
+        } else {
+            result.userOs = false;
+        }
+
+        // determine version
+        if (result.userOs === 'iOS' && (uaindex > -1)) {
+            var userOsTemp = ua.substr(uaindex + 3);
+            var indexOfEndOfVersion = userOsTemp.indexOf(' ');
+
+            if (indexOfEndOfVersion !== -1) {
+                result.userOs = userOsTemp.substring(0, userOsTemp.indexOf(' ')).replace(/_/g, '.');
+                result.userOsMajor = parseInt(result.userOs);
+            }
+
+        } else if (result.userOs === 'Android' && (uaindex > -1)) {
+            result.userOsVer = ua.substr(uaindex + 8, 3);
+
+        } else {
+            result.userOsVer = false;
+        }
+
+        return result;
     },
 
     getCurrentVideoDuration: function() {
@@ -122,7 +194,7 @@ var vastPlayerClass = {
                 fallbackMediaFile = mediaFiles[i].childNodes[0].nodeValue;
             }
 
-            if (mediaFiles[i].getAttribute('type') == this.displayOptions.mediaType) {
+            if (mediaFiles[i].getAttribute('type') === this.displayOptions.mediaType) {
                 return mediaFiles[i].childNodes[0].nodeValue;
             }
         }
@@ -228,76 +300,126 @@ var vastPlayerClass = {
         }
     },
 
+    prepareVast: function() {
+        var player = this;
+
+        player.initialStart = true;
+        player.parseVastTag(player.vastOptions.vastTagUrl);
+    },
+
+    toggleLoader: function(showLoader) {
+        if (this.displayOptions.layout === 'browser') {
+            //The browser handles all the layout of the video tag
+            return;
+        }
+
+        var loaderDiv = document.getElementById('vast_video_loading_' + this.videoPlayerId);
+
+        if (showLoader) {
+            loaderDiv.style.display = 'table';
+        } else {
+            loaderDiv.style.display = 'none';
+        }
+    },
+
+    sendRequest: function(url, withCredentials, timeout, functionReadyStateChange) {
+        var xmlHttpReq = new XMLHttpRequest();
+
+        xmlHttpReq.onreadystatechange = functionReadyStateChange;
+
+        xmlHttpReq.open('GET', url, true);
+        xmlHttpReq.withCredentials = withCredentials;
+        xmlHttpReq.timeout = timeout;
+        xmlHttpReq.send();
+    },
+
     /**
      * Parse the VAST Tag
      *
-     * @param string vastTag
+     * @param vastTag
      */
     parseVastTag: function(vastTag) {
         var player = this;
+        var videoPlayerTag = document.getElementById(player.videoPlayerId);
 
-        var xmlHttpReq;
-        var xmlResponse;
-
-        if (window.XMLHttpRequest) {
-            xmlHttpReq = new XMLHttpRequest();
-
-        } else {
-            //IE
-            xmlHttpReq = new ActiveXObject("Microsoft.XMLHTTP");
-        }
-
-        xmlHttpReq.onreadystatechange = function() {
-            if (!(xmlHttpReq.readyState == 4 && xmlHttpReq.status == 200)) {
-                return;
-            }
-
-            xmlResponse = xmlHttpReq.responseXML;
-            
-            //Get impression tag
-            var impression = xmlResponse.getElementsByTagName("Impression");
-            if(impression != null) {
-                player.registerImpressionEvents(impression);
-            }
-
-            //Set initial values
-            player.vastOptions.skipoffset = false;
-            player.vastOptions.adFinished = false;
-
-            //Get Creative
-            var creative = xmlResponse.getElementsByTagName("Creative");                
-
-            //Currently only 1 creative and 1 linear is supported
-            if ((typeof creative !== 'undefined') && creative.length) {
-                var arrayCreativeLinears = creative[0].getElementsByTagName("Linear");
-
-                if ((typeof arrayCreativeLinears !== 'undefined') && (arrayCreativeLinears != null) && arrayCreativeLinears.length) {
-                    creativeLinear = arrayCreativeLinears[0];
-
-                    //Extract the necessary data from the Linear node
-                    player.vastOptions.skipoffset       = player.convertTimeStringToSeconds(creativeLinear.getAttribute('skipoffset'));
-                    player.vastOptions.clickthroughUrl = player.getClickThroughUrlFromLinear(creativeLinear);
-                    player.vastOptions.clicktracking    = player.getClickTrackingEvents(creativeLinear);
-                    player.vastOptions.duration         = player.getDurationFromLinear(creativeLinear);
-                    player.vastOptions.mediaFile       = player.getMediaFileFromLinear(creativeLinear);
-                    
-                    player.registerTrackingEvents();
-                }
-
-                if (typeof player.vastOptions.mediaFile !== 'undefined') {
-                    player.preRoll();
-                } else {
-                    player.displayOptions.noVastVideoCallback();
-                }
-            } else {
-                player.displayOptions.noVastVideoCallback();
-            }
-            player.displayOptions.vastLoadedCallback();
+        var playVideo = function() {
+            player.toggleLoader(false);
+            videoPlayerTag.play();
         };
 
-        xmlHttpReq.open("GET", vastTag, true);
-        xmlHttpReq.withCredentials = true;
-        xmlHttpReq.send();
+        player.toggleLoader(true);
+
+        player.sendRequest(
+            vastTag,
+            true,
+            player.displayOptions.vastTimeout,
+            function() {
+                var xmlHttpReq = this;
+
+                if ((xmlHttpReq.readyState === 4) && (xmlHttpReq.status !== 200)) {
+                    //The response returned an error. Proceeding with the main video.
+                    videoPlayerTag.pause();
+                    videoPlayerTag.src = player.originalSrc;
+                    playVideo();
+                    player.displayOptions.noVastVideoCallback();
+                    return;
+                }
+
+                if (!((xmlHttpReq.readyState === 4) && (xmlHttpReq.status === 200))) {
+                    return;
+                }
+
+                var xmlResponse = xmlHttpReq.responseXML;
+
+                //Get impression tag
+                var impression = xmlResponse.getElementsByTagName('Impression');
+                if(impression !== null) {
+                    player.registerImpressionEvents(impression);
+                }
+
+                //Set initial values
+                player.vastOptions.skipoffset = false;
+                player.vastOptions.adFinished = false;
+
+                //Get Creative
+                var creative = xmlResponse.getElementsByTagName('Creative');
+
+                //Currently only 1 creative and 1 linear is supported
+                if ((typeof creative !== 'undefined') && creative.length) {
+                    var arrayCreativeLinears = creative[0].getElementsByTagName('Linear');
+
+                    if ((typeof arrayCreativeLinears !== 'undefined') && (arrayCreativeLinears !== null) && arrayCreativeLinears.length) {
+                        creativeLinear = arrayCreativeLinears[0];
+
+                        //Extract the necessary data from the Linear node
+                        player.vastOptions.skipoffset      = player.convertTimeStringToSeconds(creativeLinear.getAttribute('skipoffset'));
+                        player.vastOptions.clickthroughUrl = player.getClickThroughUrlFromLinear(creativeLinear);
+                        player.vastOptions.clicktracking   = player.getClickTrackingEvents(creativeLinear);
+                        player.vastOptions.duration        = player.getDurationFromLinear(creativeLinear);
+                        player.vastOptions.mediaFile       = player.getMediaFileFromLinear(creativeLinear);
+
+                        player.registerTrackingEvents();
+                    }
+
+                    if (typeof player.vastOptions.mediaFile !== 'undefined') {
+                        player.preRoll();
+                    } else {
+                        //Play the main video
+                        videoPlayerTag.pause();
+                        videoPlayerTag.src = player.originalSrc;
+                        playVideo();
+                        player.displayOptions.noVastVideoCallback();
+                    }
+                } else {
+                    //Play the main video
+                    videoPlayerTag.pause();
+                    videoPlayerTag.src = player.originalSrc;
+                    playVideo();
+                    player.displayOptions.noVastVideoCallback();
+                }
+                player.displayOptions.vastLoadedCallback();
+            }
+        );
     },
 
     preRoll: function() {
@@ -305,8 +427,8 @@ var vastPlayerClass = {
         var videoPlayerTag = document.getElementById(player.videoPlayerId);
 
         var playVideoPlayer = function() {
-
             //Load the PreRoll ad
+            videoPlayerTag.pause();
             videoPlayerTag.src = player.vastOptions.mediaFile;
             videoPlayerTag.load();
 
@@ -323,7 +445,7 @@ var vastPlayerClass = {
 
                 videoPlayerTag.removeAttribute('controls'); //Remove the default Controls
 
-                if (player.displayOptions.layout == 'default') {
+                if (player.displayOptions.layout === 'default') {
                     var progressbarContainer = document.getElementById(player.videoPlayerId + '_vast_controls_progress_container');
 
                     if (progressbarContainer !== null) {
@@ -333,12 +455,13 @@ var vastPlayerClass = {
 
                 player.isCurrentlyPlayingAd = true;
 
+                player.toggleLoader(false);
                 videoPlayerTag.play();
 
                 //Announce the impressions
                 trackSingleEvent('impression');
 
-                videoPlayerTag.removeEventListener('loadedmetadata',switchPlayerToVastMode);
+                videoPlayerTag.removeEventListener('loadedmetadata', switchPlayerToVastMode);
             };
 
             /**
@@ -346,7 +469,6 @@ var vastPlayerClass = {
              */
             videoPlayerTag.addEventListener('loadedmetadata', switchPlayerToVastMode);
             videoPlayerTag.addEventListener('ended', player.onVastAdEnded);
-            videoPlayerTag.removeEventListener('play', playVideoPlayer);
         };
 
         var trackSingleEvent = function(eventType, eventSubType) {
@@ -358,8 +480,8 @@ var vastPlayerClass = {
                 case 'midpoint':
                 case 'thirdQuartile':
                 case 'complete':
-                    if (player.vastOptions.stopTracking[eventType] == false) {
-                        if (player.vastOptions.tracking[eventType] != null) {
+                    if (player.vastOptions.stopTracking[eventType] === false) {
+                        if (player.vastOptions.tracking[eventType] !== null) {
                             trackingUris = player.vastOptions.tracking[eventType];
                         }
 
@@ -371,7 +493,7 @@ var vastPlayerClass = {
                 case 'progress':
                     player.vastOptions.tracking['progress'][eventSubType].elements.forEach(function(currentValue, index) {
                         if (
-                            (player.vastOptions.tracking['progress'][eventSubType].stopTracking == false) &&
+                            (player.vastOptions.tracking['progress'][eventSubType].stopTracking === false) &&
                             (player.vastOptions.tracking['progress'][eventSubType].elements.length)
                         ) {
                             trackingUris = player.vastOptions.tracking['progress'][eventSubType].elements;
@@ -383,8 +505,9 @@ var vastPlayerClass = {
 
                 case 'impression':
                     if (
-                        (player.vastOptions.impression != null)
-                        && (typeof player.vastOptions.impression.length !== 'unknown')
+                        (typeof player.vastOptions.impression !== 'undefined') &&
+                        (player.vastOptions.impression !== null) &&
+                        (typeof player.vastOptions.impression.length !== 'unknown')
                     ) {
                         trackingUris = player.vastOptions.impression;
                     }
@@ -440,18 +563,19 @@ var vastPlayerClass = {
             }
         };
 
-        videoPlayerTag.addEventListener('play', playVideoPlayer);
+        playVideoPlayer();
+
         videoPlayerTag.addEventListener('timeupdate', videoPlayerTimeUpdate);
     },
 
-    onVastAdEnded: function() {
-        //"this" is the HTML5 video tag, because it disptches the "ended" event
-        var player = vastPlayerClass.getInstanceById(this.id);
+    switchToMainVideo: function() {
+        var player = this;
+        var videoPlayerTag = document.getElementById(player.videoPlayerId);
 
-        this.src = player.originalSrc;
+        videoPlayerTag.src = player.originalSrc;
 
-        this.load();
-        this.play();
+        videoPlayerTag.load();
+        videoPlayerTag.play();
 
         player.isCurrentlyPlayingAd = false;
 
@@ -460,7 +584,7 @@ var vastPlayerClass = {
         player.vastOptions.adFinished = true;
         player.displayOptions.vastVideoEndedCallback();
 
-        if (player.displayOptions.layout == 'default') {
+        if (player.displayOptions.layout === 'default') {
             var progressbarContainer = document.getElementById(player.videoPlayerId + '_vast_controls_progress_container');
 
             if (progressbarContainer !== null) {
@@ -468,11 +592,16 @@ var vastPlayerClass = {
             }
         }
 
-        this.removeEventListener('ended', player.onVastAdEnded);
+        videoPlayerTag.removeEventListener('ended', player.onVastAdEnded);
 
         if (player.displayOptions.layout === 'browser') {
-            this.setAttribute('controls', 'controls');
+            videoPlayerTag.setAttribute('controls', 'controls');
         }
+    },
+
+    onVastAdEnded: function() {
+        //"this" is the HTML5 video tag, because it disptches the "ended" event
+        vastPlayerClass.getInstanceById(this.id).switchToMainVideo();
     },
 
     /**
@@ -552,20 +681,38 @@ var vastPlayerClass = {
             'style',
             'position: absolute; cursor: pointer; top: 0; left: 0; width: ' +
                     videoPlayerTag.offsetWidth + 'px; height: ' +
-                    (videoPlayerTag.offsetHeight) + 'px; border: 1px solid red;'
+                    (videoPlayerTag.offsetHeight) + 'px;'
         );
 
         divWrapper.appendChild(divClickThrough);
 
         //Bind the Onclick event
-        var clickthroughLayer = document.getElementById('vast_clickthrough_layer_' + player.videoPlayerId);
-
-        clickthroughLayer.onclick = function() {
+        var openClickthrough = function() {
             window.open(player.vastOptions.clickthroughUrl);
 
             //Tracking the Clickthorugh events
             if (typeof player.vastOptions.clicktracking !== 'undefined') {
                 player.callUris(player.vastOptions.clicktracking);
+            }
+        };
+
+        var clickthroughLayer = document.getElementById('vast_clickthrough_layer_' + player.videoPlayerId);
+        var deviceInfo = vastPlayerClass.getMobileOs();
+        var isIos9orLower = (deviceInfo.device === 'iPhone') && (deviceInfo.userOsMajor !== false) && (deviceInfo.userOsMajor <= 9);
+
+        clickthroughLayer.onclick = function() {
+            if (videoPlayerTag.paused) {
+                //On Mobile Safari on iPhones with iOS 9 or lower open the clickthrough only once
+                if (isIos9orLower && !player.suppressClickthrough) {
+                    openClickthrough();
+                    player.suppressClickthrough = true;
+
+                } else {
+                    videoPlayerTag.play();
+                }
+
+            } else {
+                openClickthrough();
             }
         };
     },
@@ -644,7 +791,8 @@ var vastPlayerClass = {
             play_arrow:      '&#xE037;',
             pause:           '&#xE034;',
             fullscreen:      '&#xE5D0;',
-            fullscreen_exit: '&#xE5D1;'
+            fullscreen_exit: '&#xE5D1;',
+            hourglass_empty: '&#xE88B;'
         };
     },
 
@@ -691,12 +839,21 @@ var vastPlayerClass = {
 
     controlPlayPauseToggle: function(videoPlayerId, isPlaying) {
         var playPauseButton = document.getElementById(videoPlayerId + '_vast_control_playpause');
+        var menuOptionPlay = document.getElementById(videoPlayerId + 'context_option_play');
 
         if (isPlaying) {
             playPauseButton.innerHTML = vastPlayerClass.controlMaterialIconsGetMappedIcon('pause');
 
+            if (menuOptionPlay !== null) {
+                menuOptionPlay.innerHTML = 'Pause';
+            }
+
         } else {
             playPauseButton.innerHTML = vastPlayerClass.controlMaterialIconsGetMappedIcon('play_arrow');
+         
+            if (menuOptionPlay !== null) {
+                menuOptionPlay.innerHTML = 'Play';
+            }
         }
     },
 
@@ -720,6 +877,7 @@ var vastPlayerClass = {
         var volumebarTotalWidth = document.getElementById(videoPlayerId + '_vast_control_volume').clientWidth;
         var volumeposTagWidth = volumeposTag.clientWidth;
         var muteButtonTag = document.getElementById(videoPlayerId + '_vast_control_mute');
+        var menuOptionMute = document.getElementById(videoPlayerId + 'context_option_mute');
 
         if (videoPlayerTag.volume) {
             player.latestVolume = videoPlayerTag.volume;
@@ -728,8 +886,16 @@ var vastPlayerClass = {
         if (videoPlayerTag.volume) {
             muteButtonTag.innerHTML = vastPlayerClass.controlMaterialIconsGetMappedIcon('volume_up');
 
+            if (menuOptionMute !== null) {
+                menuOptionMute.innerHTML = 'Mute';
+            }
+
         } else {
             muteButtonTag.innerHTML = vastPlayerClass.controlMaterialIconsGetMappedIcon('volume_off');
+
+            if (menuOptionMute !== null) {
+                menuOptionMute.innerHTML = 'Unmute';
+            }
         }
 
         volumeposTag.style.left = (videoPlayerTag.volume * volumebarTotalWidth - (volumeposTagWidth / 2)) + 'px';
@@ -737,9 +903,7 @@ var vastPlayerClass = {
 
     muteToggle: function(videoPlayerId) {
         var player = vastPlayerClass.getInstanceById(videoPlayerId);
-
         var videoPlayerTag = document.getElementById(videoPlayerId);
-        
 
         if (videoPlayerTag.volume) {
             videoPlayerTag.volume = 0;
@@ -772,6 +936,7 @@ var vastPlayerClass = {
         var fullscreenTag = document.getElementById('vast_video_wrapper_' + videoPlayerId);
         var requestFullscreenFunctionNames = this.checkFullscreenSupport('vast_video_wrapper_' + videoPlayerId);
         var fullscreenButton = document.getElementById(videoPlayerId + '_vast_control_fullscreen');
+        var menuOptionFullscreen = document.getElementById(videoPlayerId + 'context_option_fullscreen');
 
         if (requestFullscreenFunctionNames) {
             var functionNameToExecute = '';
@@ -781,10 +946,18 @@ var vastPlayerClass = {
                 functionNameToExecute = 'videoPlayerTag.' + requestFullscreenFunctionNames.goFullscreen + '();';
                 fullscreenButton.innerHTML = vastPlayerClass.controlMaterialIconsGetMappedIcon('fullscreen_exit');
 
+                if (menuOptionFullscreen !== null) {
+                    menuOptionFullscreen.innerHTML = 'Exit Fullscreen';
+                }
+
             } else {
                 //Exit fullscreen
                 functionNameToExecute = 'document.' + requestFullscreenFunctionNames.exitFullscreen + '();';
                 fullscreenButton.innerHTML = vastPlayerClass.controlMaterialIconsGetMappedIcon('fullscreen');
+
+                if (menuOptionFullscreen !== null) {
+                    menuOptionFullscreen.innerHTML = 'Fullscreen';
+                }
             }
 
             new Function('videoPlayerTag', functionNameToExecute)(fullscreenTag);
@@ -795,16 +968,24 @@ var vastPlayerClass = {
                 fullscreenTag.className = fullscreenTag.className.replace(/\bpseudo_fullscreen\b/g, '');
                 fullscreenButton.innerHTML = vastPlayerClass.controlMaterialIconsGetMappedIcon('fullscreen');
 
+                if (menuOptionFullscreen !== null) {
+                    menuOptionFullscreen.innerHTML = 'Fullscreen';
+                }
+
             } else {
                 fullscreenTag.className += ' pseudo_fullscreen';
                 fullscreenButton.innerHTML = vastPlayerClass.controlMaterialIconsGetMappedIcon('fullscreen_exit');
+
+                if (menuOptionFullscreen !== null) {
+                    menuOptionFullscreen.innerHTML = 'Exit Fullscreen';
+                }
             }
         }
 
         this.recalculateAdDimensions();
     },
 
-    getClickedBarOffsetX: function(evt, el) {
+    getEventOffsetX: function(evt, el) {
         var x = 0;
 
         while (el && !isNaN(el.offsetLeft)) {
@@ -813,6 +994,17 @@ var vastPlayerClass = {
         }
 
         return evt.clientX - x;
+    },
+
+    getEventOffsetY: function(evt, el) {
+        var y = 0;
+
+        while (el && !isNaN(el.offsetTop)) {
+            y += el.offsetTop - el.scrollTop;
+            el = el.offsetParent;
+        }
+
+        return evt.clientY - y;
     },
 
     onProgressbarClick: function(videoPlayerId, event) {
@@ -824,7 +1016,7 @@ var vastPlayerClass = {
 
         var videoPlayerTag = document.getElementById(videoPlayerId);
         var totalWidth = document.getElementById(videoPlayerId + '_vast_controls_progress_container').clientWidth;
-        var clickedX = vastPlayerClass.getClickedBarOffsetX(event, document.getElementById(videoPlayerId + '_vast_controls_progress_container'));
+        var clickedX = vastPlayerClass.getEventOffsetX(event, document.getElementById(videoPlayerId + '_vast_controls_progress_container'));
 
         if (totalWidth) {
             videoPlayerTag.currentTime = player.currentVideoDuration * clickedX / totalWidth;
@@ -834,7 +1026,7 @@ var vastPlayerClass = {
     onVolumebarClick: function(videoPlayerId, event) {
         var videoPlayerTag = document.getElementById(videoPlayerId);
         var totalWidth = document.getElementById(videoPlayerId + '_vast_control_volume_container').clientWidth;
-        var clickedX = vastPlayerClass.getClickedBarOffsetX(event, document.getElementById(videoPlayerId + '_vast_control_volume_container'));
+        var clickedX = vastPlayerClass.getEventOffsetX(event, document.getElementById(videoPlayerId + '_vast_control_volume_container'));
 
         if (totalWidth) {
             var newVolume = clickedX / totalWidth;
@@ -850,25 +1042,51 @@ var vastPlayerClass = {
         }
     },
 
+    initialPlay: function() {
+        var videoPlayerTag = this;
+        var player = vastPlayerClass.getInstanceById(videoPlayerTag.id)
+
+        if (!player.initialStart) {
+            player.playPauseToggle(videoPlayerTag);
+
+            videoPlayerTag.removeEventListener('play', player.initialPlay);
+        }
+    },
+
+    playPauseToggle: function(videoPlayerTag) {
+        var player = vastPlayerClass.getInstanceById(videoPlayerTag.id);
+
+        if (player.initialStart) {
+            if (player.displayOptions.layout !== 'browser') { //The original player play/pause toggling is managed by the browser
+                if (videoPlayerTag.paused) {
+                    videoPlayerTag.play();
+                } else {
+                    videoPlayerTag.pause();
+                }
+            }
+        } else {
+            //Workaround for Chrome Mobile - otherwise it blocks the subsequent
+            //play() command, because it considers it not being triggered by the user.
+            videoPlayerTag.src = 'blank.mp4';
+            videoPlayerTag.play();
+
+            //trigger the loading of the VAST Tag
+            player.prepareVast();
+        }
+    },
+
     setCustomControls: function() {
         var player = this;
         var videoPlayerTag = document.getElementById(this.videoPlayerId);
 
         //Set the Play/Pause behaviour
-        document.getElementById(this.videoPlayerId).addEventListener('click', function() {
-            if (videoPlayerTag.paused) {
-                videoPlayerTag.play();
-            } else {
-                videoPlayerTag.pause();
-            }
-        }, false);
-
         document.getElementById(this.videoPlayerId + '_vast_control_playpause').addEventListener('click', function() {
-            if (videoPlayerTag.paused) {
-                videoPlayerTag.play();
-            } else {
-                videoPlayerTag.pause();
+
+            if (!player.initialStart) {
+                videoPlayerTag.removeEventListener('play', player.initialPlay);
             }
+
+            player.playPauseToggle(videoPlayerTag);
         }, false);
 
         document.getElementById(player.videoPlayerId).addEventListener('play', function() {
@@ -908,34 +1126,122 @@ var vastPlayerClass = {
         });
     },
 
+    setCustomContextMenu: function() {
+        var player = this;
+        var videoPlayerTag = document.getElementById(player.videoPlayerId);
+
+        //Create own context menu
+        var divContextMenu = document.createElement('div');
+        divContextMenu.id = player.videoPlayerId + '_vast_context_menu';
+        divContextMenu.className = 'vast_context_menu';
+        divContextMenu.style.display = 'none';
+        divContextMenu.style.position = 'absolute';
+        divContextMenu.innerHTML = '<ul>'+
+            '    <li id="' + player.videoPlayerId + 'context_option_play">Play</li>' +
+            '    <li id="' + player.videoPlayerId + 'context_option_mute">Mute</li>' +
+            '    <li id="' + player.videoPlayerId + 'context_option_fullscreen">Fullscreen</li>' +
+            '</ul>';
+
+        videoPlayerTag.parentNode.insertBefore(divContextMenu, videoPlayerTag.nextSibling);
+
+        //Disable the default context menu
+        videoPlayerTag.addEventListener('contextmenu', function(event) {
+            event.preventDefault();
+
+            divContextMenu.style.left = vastPlayerClass.getEventOffsetX(event, videoPlayerTag) + 'px';
+            divContextMenu.style.top = vastPlayerClass.getEventOffsetY(event, videoPlayerTag) + 'px';
+            divContextMenu.style.display = 'block';
+        }, false);
+
+        //Hide the context menu on clicking elsewhere
+        document.addEventListener('click', function(event) {
+            if ((event.target !== videoPlayerTag) || event.button !== 2) {
+                divContextMenu.style.display = 'none';
+            }
+
+        }, false);
+
+        //Attach events to the menu elements
+        var menuOptionPlay       = document.getElementById(player.videoPlayerId + 'context_option_play');
+        var menuOptionMute       = document.getElementById(player.videoPlayerId + 'context_option_mute');
+        var menuOptionFullscreen = document.getElementById(player.videoPlayerId + 'context_option_fullscreen');
+
+        menuOptionPlay.addEventListener('click', function() {
+            player.playPauseToggle(videoPlayerTag);
+        }, false);
+
+        menuOptionMute.addEventListener('click', function() {
+            player.muteToggle(player.videoPlayerId);
+        }, false);
+
+        menuOptionFullscreen.addEventListener('click', function() {
+            player.fullscreenToggle(player.videoPlayerId);
+        }, false);
+    },
+
     setDefaultLayout: function() {
+        var player = this;
+
         //Load the icon css
         vastPlayerClass.requestStylesheet('defaultLayoutIcons', vastPlayerClass.defaultIconUrl);
         vastPlayerClass.requestStylesheet('defaultControlsStylesheet', vastPlayerClass.defaultControlsStylesheet);
 
-        var videoPlayerTag = document.getElementById(this.videoPlayerId);
+        var videoPlayerTag = document.getElementById(player.videoPlayerId);
 
         //Remove the default Controls
         videoPlayerTag.removeAttribute('controls');
 
-        var divVastControls = document.createElement('div');
-        divVastControls.id = this.videoPlayerId + '_vast_controls_container';
-        divVastControls.className = 'vast_controls_container';
-        divVastControls.innerHTML = this.generateCustomControlTags();
+        player.setCustomContextMenu();
 
-        var player = this;
+        var divVastControls = document.createElement('div');
+        divVastControls.id = player.videoPlayerId + '_vast_controls_container';
+        divVastControls.className = 'vast_controls_container';
+        divVastControls.innerHTML = player.generateCustomControlTags();
 
         videoPlayerTag.parentNode.insertBefore(divVastControls, videoPlayerTag.nextSibling);
+
+        //Create the loading cover
+        var divLoading = document.createElement('div');
+        divLoading.className = 'vast_video_loading';
+        divLoading.id = 'vast_video_loading_' + player.videoPlayerId;
+        divLoading.style.display = 'none';
+        divLoading.innerHTML = '<i class="material-icons md-48">' + vastPlayerClass.controlMaterialIconsGetMappedIcon('hourglass_empty') + '</i>';
+
+        videoPlayerTag.parentNode.insertBefore(divLoading, videoPlayerTag.nextSibling);
 
         //Wait for the volume bar to be rendered
         setTimeout(function() {
             player.contolVolumebarUpdate(player.videoPlayerId);
         }, 100);
 
-        this.setCustomControls();
+        player.setCustomControls();
+
+        player.setupThumbnailPreview();
+    },
+
+    forceLayoutIfNeeded: function() {
+        var userAgent = window.navigator.userAgent;
+
+        //Force "browser" mode for Mobile Safari on iPhone
+        if (userAgent.match(/iPhone/i) && userAgent.match(/WebKit/i) && !userAgent.match(/CriOS/i)) {
+            this.displayOptions.layout = 'browser';
+        }
     },
 
     setLayout: function() {
+        var player = this;
+        var videoPlayerTag = document.getElementById(player.videoPlayerId);
+
+        player.forceLayoutIfNeeded();
+
+        //Mobile Safari - because it does not emit a click event on initial click of the video
+        videoPlayerTag.addEventListener('play', player.initialPlay, false);
+
+        //All other browsers
+        document.getElementById(this.videoPlayerId).addEventListener('click', function() {
+            player.playPauseToggle(videoPlayerTag);
+        }, false);
+
         switch (this.displayOptions.layout) {
             case 'default':
                 this.setDefaultLayout();
@@ -946,6 +1252,9 @@ var vastPlayerClass = {
                 break;
 
             case 'browser':
+                //Nothing special to do here at this point.
+                break;
+
             default:
                 break;
         }
@@ -971,43 +1280,179 @@ var vastPlayerClass = {
         }
     },
 
-    init: function(idVideoPlayer, vastTag, options) {
-        this.vastOptions = {
-            tracking:     [],
-            stopTracking: []
-        };
+    setupThumbnailPreviewVtt: function() {
+        var player = this;
 
-        this.videoPlayerId        = idVideoPlayer;
-        this.originalSrc          = this.getCurrentSrc();
-        this.isCurrentlyPlayingAd = false;
-        this.recentWaiting        = false;
-        this.latestVolume         = 1;
-        this.currentVideoDuration = 0;
+        player.sendRequest(
+            player.displayOptions.timelinePreview.file,
+            true,
+            player.displayOptions.vastTimeout,
+            function() {
+                var convertVttRawData = function(vttRawData) {
+                    if (!(
+                        (typeof vttRawData.cues !== 'undefined') &&
+                        (vttRawData.cues.length)
+                    )) {
+                        return [];
+                    }
 
-        //Default options
-        this.displayOptions = {
-            mediaType : 'video/mp4',//TODO: should be taken from the VAST Tag; consider removing it completely, since the supported format is browser-dependent
-            skipButtonCaption: 'Skip ad in [seconds]',
-            skipButtonClickCaption: 'Skip ad &#9193;',
-            layout: 'default', //options: browser, default, custom
-            vastLoadedCallback: (function() {}),
-            noVastVideoCallback: (function() {}),
-            vastVideoSkippedCallback: (function() {}),
-            vastVideoEndedCallback: (function() {})
-        };
+                    var result = [];
+                    var tempThumbnailData = null;
+                    var tempThumbnailCoordinates = null;
 
-        //Overriding the default options
-        for (var key in options) {
-            this.displayOptions[key] = options[key];
+                    for (var i = 0; i < vttRawData.cues.length; i++) {
+                        tempThumbnailData = vttRawData.cues[i].text.split('#');
+
+                        if (
+                            (tempThumbnailData.length === 2) &&
+                            (tempThumbnailData[1].indexOf('xywh=') === 0)
+                        ) {
+                            tempThumbnailCoordinates = tempThumbnailData[1].substring(5);
+                            tempThumbnailCoordinates = tempThumbnailCoordinates.split(',');
+
+                            if (tempThumbnailCoordinates.length === 4) {
+                                result.push({
+                                    startTime: vttRawData.cues[i].startTime,
+                                    endTime: vttRawData.cues[i].endTime,
+                                    image: tempThumbnailData[0],
+                                    x: parseInt(tempThumbnailCoordinates[0]),
+                                    y: parseInt(tempThumbnailCoordinates[1]),
+                                    w: parseInt(tempThumbnailCoordinates[2]),
+                                    h: parseInt(tempThumbnailCoordinates[3])
+                                });
+                            }
+                        }
+                    }
+
+                    return result;
+                };
+
+                var xmlHttpReq = this;
+
+                if ((xmlHttpReq.readyState === 4) && (xmlHttpReq.status !== 200)) {
+                    //The response returned an error.
+                    return;
+                }
+
+                if (!((xmlHttpReq.readyState === 4) && (xmlHttpReq.status === 200))) {
+                    return;
+                }
+
+                var textResponse = xmlHttpReq.responseText;
+
+                var webVttParser = new WebVTTParser();
+                var vttRawData = webVttParser.parse(textResponse);
+
+                player.timelinePreviewData = convertVttRawData(vttRawData);
+            }
+        );
+    },
+
+    generateTimelinePreviewTags: function() {
+        var player = this;
+        var progressContainer = document.getElementById(player.videoPlayerId + '_vast_controls_progress_container');
+        var previewContainer = document.createElement('div');
+
+        previewContainer.id = player.videoPlayerId + '_vast_timeline_preview_container';
+        previewContainer.className = 'vast_timeline_preview_container';
+        previewContainer.style.display = 'none';
+        previewContainer.style.position = 'absolute';
+
+        progressContainer.appendChild(previewContainer);
+    },
+
+    getThumbnailCoordinates: function(second) {
+        var player = this;
+
+        if (player.timelinePreviewData.length) {
+            for (var i = 0; i < player.timelinePreviewData.length; i++) {
+                if ((second >= player.timelinePreviewData[i].startTime) && (second <= player.timelinePreviewData[i].endTime)) {
+                    return player.timelinePreviewData[i];
+                }
+            }
         }
 
-        var videoPlayer = document.getElementById(idVideoPlayer);
+        return false;
+    },
+
+    drawTimelinePreview: function(event) {
         var player = this;
+        var timelinePreviewTag = document.getElementById(player.videoPlayerId + '_vast_timeline_preview_container');
+        var progressContainer = document.getElementById(player.videoPlayerId + '_vast_controls_progress_container');
+        var totalWidth = progressContainer.clientWidth;
+
+        if (player.isCurrentlyPlayingAd) {
+            if (timelinePreviewTag.style.display !== 'none') {
+                timelinePreviewTag.style.display = 'none';
+            }
+
+            return;
+        }
+
+        //get the hover position
+        var hoverX = vastPlayerClass.getEventOffsetX(event, progressContainer);
+        var hoverSecond = null;
+
+        if (totalWidth) {
+            hoverSecond = player.currentVideoDuration * hoverX / totalWidth;
+
+            //get the corresponding thumbnail coordinates
+            var thumbnailCoordinates = player.getThumbnailCoordinates(hoverSecond);
+
+            if (thumbnailCoordinates !== false) {
+                timelinePreviewTag.style.width = thumbnailCoordinates.w + 'px';
+                timelinePreviewTag.style.height = thumbnailCoordinates.h + 'px';
+                timelinePreviewTag.style.background =
+                    'url(' + thumbnailCoordinates.image + ') no-repeat scroll -' + thumbnailCoordinates.x + 'px -' + thumbnailCoordinates.y + 'px';
+                timelinePreviewTag.style.left = hoverX - (thumbnailCoordinates.w / 2) + 'px';
+                timelinePreviewTag.style.display = 'block';
+
+            } else {
+                timelinePreviewTag.style.display = 'none';
+            }
+        }
+    },
+
+    setupThumbnailPreview: function() {
+        var player = this;
+
+        if (
+            player.displayOptions.timelinePreview &&
+            (typeof player.displayOptions.timelinePreview.file === 'string') &&
+            (typeof player.displayOptions.timelinePreview.type === 'string')
+        ) {
+            switch (player.displayOptions.timelinePreview.type) {
+                case 'VTT':
+                    vastPlayerClass.requestScript('scripts/webvtt.js', player.setupThumbnailPreviewVtt.bind(this));
+
+                    document.getElementById(player.videoPlayerId + '_vast_controls_progress_container')
+                        .addEventListener('mousemove', player.drawTimelinePreview.bind(player), false);
+
+                    document.getElementById(player.videoPlayerId + '_vast_controls_progress_container')
+                        .addEventListener('mouseout', function() {
+                            document.getElementById(player.videoPlayerId + '_vast_timeline_preview_container').style.display = 'none';
+                        }, false);
+
+                    player.generateTimelinePreviewTags();
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    },
+
+    setupPlayerWrapper: function() {
+        var player = this;
+        var videoPlayer = document.getElementById(player.videoPlayerId);
 
         //Create a Wrapper Div element
         var divVideoWrapper = document.createElement('div');
         divVideoWrapper.className = 'vast_video_wrapper';
-        divVideoWrapper.id = 'vast_video_wrapper_' + idVideoPlayer;
+
+        divVideoWrapper.className = (vastPlayerClass.isTouchDevice() ? 'vast_video_wrapper mobile' : 'vast_video_wrapper');
+
+        divVideoWrapper.id = 'vast_video_wrapper_' + player.videoPlayerId;
 
         //Assign the height/width dimensions to the wrapper
         divVideoWrapper.style.height = videoPlayer.clientHeight + 'px';
@@ -1017,28 +1462,68 @@ var vastPlayerClass = {
 
         videoPlayer.parentNode.insertBefore(divVideoWrapper, videoPlayer);
         divVideoWrapper.appendChild(videoPlayer);
+    },
 
-        videoPlayer.addEventListener('webkitfullscreenchange', this.recalculateAdDimensions, false);
-        videoPlayer.addEventListener('fullscreenchange', this.recalculateAdDimensions, false);
-        videoPlayer.addEventListener('waiting', this.onRecentWaiting, false);
-        videoPlayer.addEventListener('pause', this.onVastPlayerPause, false);
+    init: function(idVideoPlayer, vastTag, options) {
+        var player = this;
+        var videoPlayer = document.getElementById(idVideoPlayer);
+
+        player.vastOptions = {
+            vastTagUrl:   vastTag,
+            tracking:     [],
+            stopTracking: []
+        };
+
+        player.videoPlayerId        = idVideoPlayer;
+        player.originalSrc          = player.getCurrentSrc();
+        player.isCurrentlyPlayingAd = false;
+        player.recentWaiting        = false;
+        player.latestVolume         = 1;
+        player.currentVideoDuration = 0;
+        player.initialStart         = false;
+        player.suppressClickthrough = false;
+        player.timelinePreviewData  = [];
+
+        //Default options
+        player.displayOptions = {
+            mediaType:                'video/mp4',//TODO: should be taken from the VAST Tag; consider removing it completely, since the supported format is browser-dependent
+            skipButtonCaption:        'Skip ad in [seconds]',
+            skipButtonClickCaption:   'Skip ad &#9193;',
+            layout:                   'default', //options: browser, default, custom
+            vastTimeout:              5000, //number of milliseconds before the VAST Tag call timeouts
+            timelinePreview:          {}, //Structure: {file: 'filename.vtt', type: 'VTT'}. Supported types: VTT only at this time.
+            vastLoadedCallback:       (function() {}),
+            noVastVideoCallback:      (function() {}),
+            vastVideoSkippedCallback: (function() {}),
+            vastVideoEndedCallback:   (function() {})
+        };
+
+        //Overriding the default options
+        for (var key in options) {
+            player.displayOptions[key] = options[key];
+        }
+
+        player.setupPlayerWrapper();
+
+        videoPlayer.addEventListener('webkitfullscreenchange', player.recalculateAdDimensions, false);
+        videoPlayer.addEventListener('fullscreenchange', player.recalculateAdDimensions, false);
+        videoPlayer.addEventListener('waiting', player.onRecentWaiting, false);
+        videoPlayer.addEventListener('pause', player.onVastPlayerPause, false);
         videoPlayer.addEventListener('durationchange', function() {player.currentVideoDuration = player.getCurrentVideoDuration();}, false);
 
         //Manually load the video duration if the video was loaded before adding the event listener
-        this.currentVideoDuration = this.getCurrentVideoDuration();
+        player.currentVideoDuration = player.getCurrentVideoDuration();
 
-        if (isNaN(this.currentVideoDuration)) {
-            this.currentVideoDuration = 0;
+        if (isNaN(player.currentVideoDuration)) {
+            player.currentVideoDuration = 0;
         }
 
-        this.setLayout();
+        player.setLayout();
 
         //Set the volume control state
-        this.latestVolume = videoPlayer.volume;
+        player.latestVolume = videoPlayer.volume;
 
         //Set the custom fullscreen behaviour
-        this.handleFullscreen();
-
-        this.parseVastTag(vastTag);
+        player.handleFullscreen();
     }
 };

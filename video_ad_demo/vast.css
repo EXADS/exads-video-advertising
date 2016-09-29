@@ -43,6 +43,7 @@
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, 1);
 	cursor: pointer;
     line-height: 27px;
+    z-index: 10;
 }
 
 .skip_button a {
@@ -60,4 +61,15 @@
 	/*IE Fix*/
 	background-color: white;
 	opacity: 0;
+}
+
+/*Mobile Layout*/
+.vast_video_wrapper.mobile .skip_button {
+    height: 48px;
+}
+
+.vast_video_wrapper.mobile .skip_button,
+.vast_video_wrapper.mobile .skip_button a {
+    font-size: 20px;
+    line-height: 47px;
 }
