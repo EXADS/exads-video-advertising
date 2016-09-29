@@ -90,7 +90,7 @@ var vastPlayerClass = {
         var ua = navigator.userAgent;
         var uaindex;
 
-        var result = {device: false, userOs: false, userOsMajor: false, userOsVer: false};
+        var result = {device: false, userOs: false, userOsVer: false, userOsMajor: false};
 
         // determine OS
         if (ua.match(/iPad/i)) {
@@ -117,8 +117,8 @@ var vastPlayerClass = {
             var indexOfEndOfVersion = userOsTemp.indexOf(' ');
 
             if (indexOfEndOfVersion !== -1) {
-                result.userOs = userOsTemp.substring(0, userOsTemp.indexOf(' ')).replace(/_/g, '.');
-                result.userOsMajor = parseInt(result.userOs);
+                result.userOsVer = userOsTemp.substring(0, userOsTemp.indexOf(' ')).replace(/_/g, '.');
+                result.userOsMajor = parseInt(result.userOsVer);
             }
 
         } else if (result.userOs === 'Android' && (uaindex > -1)) {
@@ -806,6 +806,16 @@ var vastPlayerClass = {
         return '';
     },
 
+    checkShouldDisplayVolumeControls: function() {
+        var deviceType = vastPlayerClass.getMobileOs();
+
+        if (deviceType.userOs === 'iOS') {
+            return false;
+        }
+
+        return true;
+    },
+
     generateCustomControlTags: function() {
         var htmlResult = '<div class="vast_controls_left">' +
         '   <i class="material-icons vast_button" id="' + this.videoPlayerId + '_vast_control_playpause">play_arrow</i>' +
@@ -824,7 +834,7 @@ var vastPlayerClass = {
         '           <div id="' + this.videoPlayerId + '_vast_control_volume_currentpos" class="vast_control_volume_currentpos"></div>' +
         '       </div>' +
         '   </div>' +
-        '   <i class="material-icons vast_button" id="' + this.videoPlayerId + '_vast_control_mute">volume_off</i>' +
+        '   <i class="material-icons vast_button vast_control_mute" id="' + this.videoPlayerId + '_vast_control_mute">volume_off</i>' +
         '</div>';
 
         var mapObj = vastPlayerClass.controlMaterialIconsMapping();
@@ -1193,9 +1203,14 @@ var vastPlayerClass = {
 
         player.setCustomContextMenu();
 
+        var classForDisablingVolumeControls = '';
+        if (!player.checkShouldDisplayVolumeControls()) {
+            classForDisablingVolumeControls = ' no_volume_controls';
+        }
+
         var divVastControls = document.createElement('div');
         divVastControls.id = player.videoPlayerId + '_vast_controls_container';
-        divVastControls.className = 'vast_controls_container';
+        divVastControls.className = 'vast_controls_container' + classForDisablingVolumeControls;
         divVastControls.innerHTML = player.generateCustomControlTags();
 
         videoPlayerTag.parentNode.insertBefore(divVastControls, videoPlayerTag.nextSibling);

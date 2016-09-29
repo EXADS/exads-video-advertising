@@ -247,6 +247,15 @@ _:-ms-lang(x),
     border-radius: 5px;
 }
 
+.vast_controls_container.no_volume_controls .vast_controls_right .vast_control_volume_container,
+.vast_controls_container.no_volume_controls .vast_controls_right .vast_control_mute {
+    display: none;
+}
+
+.vast_controls_container.no_volume_controls .vast_controls_progress_container {
+    right: 35px;
+}
+
 .vast_controls_container .vast_button {
     border-radius: 2px;
 }
@@ -307,6 +316,10 @@ _:-ms-lang(x),
     height: 48px;
     left: 70px;
     right: 208px;
+}
+
+.vast_video_wrapper.mobile .vast_controls_container.no_volume_controls .vast_controls_progress_container {
+    right: 70px;
 }
 
 .vast_video_wrapper.mobile .vast_controls_container .vast_controls_progress_container .vast_controls_progress,
