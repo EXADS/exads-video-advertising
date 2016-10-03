@@ -247,6 +247,10 @@ _:-ms-lang(x),
     border-radius: 5px;
 }
 
+.vast_controls_container.no_volume_controls .vast_controls_right {
+    width: 24px;
+}
+
 .vast_controls_container.no_volume_controls .vast_controls_right .vast_control_volume_container,
 .vast_controls_container.no_volume_controls .vast_controls_right .vast_control_mute {
     display: none;
@@ -320,6 +324,10 @@ _:-ms-lang(x),
 
 .vast_video_wrapper.mobile .vast_controls_container.no_volume_controls .vast_controls_progress_container {
     right: 70px;
+}
+
+.vast_video_wrapper.mobile .vast_controls_container.no_volume_controls .vast_controls_right {
+    width: 48px;
 }
 
 .vast_video_wrapper.mobile .vast_controls_container .vast_controls_progress_container .vast_controls_progress,
