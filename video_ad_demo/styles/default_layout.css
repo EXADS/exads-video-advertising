@@ -1,4 +1,4 @@
-.vast_controls_container {
+.fluid_controls_container {
     color: white;
     position: absolute;
     bottom: 0;
@@ -13,12 +13,12 @@
     transition: visibility 0.5s, opacity 0.5s;
 }
 
-.vast_video_wrapper:hover .vast_controls_container {
+.fluid_video_wrapper:hover .fluid_controls_container {
     visibility: visible;
     opacity: 1;
 }
 
-.vast_video_wrapper.pseudo_fullscreen {
+.fluid_video_wrapper.pseudo_fullscreen {
     width: 100% !important;
     height: 100% !important;
     top: 0;
@@ -27,7 +27,7 @@
     z-index: 99999;
 }
 
-.vast_video_wrapper:-webkit-full-screen {
+.fluid_video_wrapper:-webkit-full-screen {
     width: 100% !important;
     height: 100% !important;
     position: absolute;
@@ -35,13 +35,13 @@
     left: 0;
 }
 
-.vast_video_wrapper:-ms-fullscreen {
+.fluid_video_wrapper:-ms-fullscreen {
     width: 100% !important;
     height: 100% !important;
     position: absolute;
 }
 
-.vast_video_wrapper .vast_video_loading {
+.fluid_video_wrapper .vast_video_loading {
     position: absolute;
     display: table;
     text-align: center;
@@ -55,7 +55,7 @@
     z-index: 10;
 }
 
-.vast_video_wrapper .vast_video_loading i {
+.fluid_video_wrapper .vast_video_loading i {
     font-size: 48px;
     color: #b0b0b0;
     display: table-cell;
@@ -93,7 +93,7 @@
     100% {opacity: 0.0;}
 }
 
-.vast_video_wrapper .vast_context_menu {
+.fluid_video_wrapper .fluid_context_menu {
     background-color: rgba(0, 0, 0, 0.7);
     border: 2px solid #000000;
     color: #FFFFFF;
@@ -107,32 +107,32 @@
 
 /* IE 10+ */
 _:-ms-lang(x),
-.vast_video_wrapper .vast_context_menu {
+.fluid_video_wrapper .fluid_context_menu {
     text-align: left;
 }
 
-.vast_video_wrapper .vast_context_menu ul {
+.fluid_video_wrapper .fluid_context_menu ul {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.vast_video_wrapper .vast_context_menu ul li {
+.fluid_video_wrapper .fluid_context_menu ul li {
     padding: 0 4px;
     cursor: pointer;
 }
 
-.vast_video_wrapper .vast_context_menu ul li:hover {
+.fluid_video_wrapper .fluid_context_menu ul li:hover {
     border-radius: 2px;
     background-color: #404040;
 }
 
-.vast_controls_container .vast_controls_left {
+.fluid_controls_container .fluid_controls_left {
     float: left;
     width: 24px;
 }
 
-.vast_controls_container i {
+.fluid_controls_container i {
     width: 24px;
     overflow: hidden; /*IE 9*/
     -moz-user-select: none;
@@ -141,17 +141,17 @@ _:-ms-lang(x),
     user-select: none;
 }
 
-.vast_controls_container .vast_controls_right {
+.fluid_controls_container .fluid_controls_right {
     float: right;
     width: 150px;
 }
 
-.vast_controls_container .vast_controls_left,
-.vast_controls_container .vast_controls_right {
+.fluid_controls_container .fluid_controls_left,
+.fluid_controls_container .fluid_controls_right {
     height: 24px;
 }
 
-.vast_controls_container .vast_controls_progress_container {
+.fluid_controls_container .fluid_controls_progress_container {
     height: 24px;
     position: absolute;
     left: 35px;
@@ -159,7 +159,7 @@ _:-ms-lang(x),
     z-index: 2;
 }
 
-.vast_controls_container .vast_controls_progress_container .vast_controls_progress {
+.fluid_controls_container .fluid_controls_progress_container .fluid_controls_progress {
     position: absolute;
     top: 10px;
     width: 100%;
@@ -169,49 +169,49 @@ _:-ms-lang(x),
     z-index: 3;
 }
 
-.vast_controls_container .vast_controls_progress_container .vast_controls_progress .vast_controls_currentprogress {
+.fluid_controls_container .fluid_controls_progress_container .fluid_controls_progress .fluid_controls_currentprogress {
     top: 0px;
     left: 0px;
     z-index: 4;
     width: 0px;
 }
 
-.vast_controls_container .vast_controls_progress_container .vast_controls_progress,
-.vast_controls_container .vast_controls_progress_container .vast_controls_progress .vast_controls_currentprogress {
+.fluid_controls_container .fluid_controls_progress_container .fluid_controls_progress,
+.fluid_controls_container .fluid_controls_progress_container .fluid_controls_progress .fluid_controls_currentprogress {
     position: absolute;
     height: 4px;
     border-radius: 2px;
 }
 
-.vast_controls_container .vast_controls_progress_container .vast_timeline_preview_container {
+.fluid_controls_container .fluid_controls_progress_container .fluid_timeline_preview_container {
     bottom: 24px;
     border: 2px solid #000000;
 }
 
-.vast_controls_container .vast_controls_progress_container.vast_slider .vast_controls_progress .vast_controls_currentprogress,
-.vast_controls_container .vast_controls_progress_container.vast_slider .vast_controls_progress .vast_controls_currentprogress .vast_controls_currentpos {
+.fluid_controls_container .fluid_controls_progress_container.fluid_slider .fluid_controls_progress .fluid_controls_currentprogress,
+.fluid_controls_container .fluid_controls_progress_container.fluid_slider .fluid_controls_progress .fluid_controls_currentprogress .fluid_controls_currentpos {
     background-color: #FF0000;
 }
 
-.vast_controls_container .vast_controls_progress_container.vast_ad_slider .vast_controls_progress .vast_controls_currentprogress {
+.fluid_controls_container .fluid_controls_progress_container.fluid_ad_slider .fluid_controls_progress .fluid_controls_currentprogress {
     background-color: #FFFF00;
 }
 
-.vast_controls_container .vast_controls_progress_container.vast_slider .vast_controls_progress .vast_controls_currentprogress .vast_controls_currentpos,
-.vast_controls_container .vast_controls_progress_container.vast_ad_slider .vast_controls_progress .vast_controls_currentprogress .vast_controls_currentpos {
+.fluid_controls_container .fluid_controls_progress_container.fluid_slider .fluid_controls_progress .fluid_controls_currentprogress .fluid_controls_currentpos,
+.fluid_controls_container .fluid_controls_progress_container.fluid_ad_slider .fluid_controls_progress .fluid_controls_currentprogress .fluid_controls_currentpos {
     opacity: 0;
 }
 
-.vast_controls_container .vast_controls_progress_container.vast_slider:hover .vast_controls_progress .vast_controls_currentprogress .vast_controls_currentpos {
+.fluid_controls_container .fluid_controls_progress_container.fluid_slider:hover .fluid_controls_progress .fluid_controls_currentprogress .fluid_controls_currentpos {
     opacity: 1;
 }
 
-.vast_controls_container .vast_controls_progress_container.vast_slider .vast_controls_progress .vast_controls_currentprogress .vast_controls_currentpos {
+.fluid_controls_container .fluid_controls_progress_container.fluid_slider .fluid_controls_progress .fluid_controls_currentprogress .fluid_controls_currentpos {
     -webkit-transition: opacity 0.3s; /* Safari */
     transition: opacity 0.3s;
 }
 
-.vast_controls_container .vast_controls_right .vast_control_volume_container {
+.fluid_controls_container .fluid_controls_right .fluid_control_volume_container {
     position: relative;
     height: 24px;
     width: 80px;
@@ -219,7 +219,7 @@ _:-ms-lang(x),
     z-index: 2;
 }
 
-.vast_controls_container .vast_controls_right .vast_control_volume_container .vast_control_volume {
+.fluid_controls_container .fluid_controls_right .fluid_control_volume_container .fluid_control_volume {
     position: relative;
     height: 4px;
     width: 100%;
@@ -229,17 +229,17 @@ _:-ms-lang(x),
     z-index: 3;
 }
 
-.vast_controls_container .vast_controls_right .vast_control_volume_container .vast_control_volume .vast_control_volume_currentpos {
+.fluid_controls_container .fluid_controls_right .fluid_control_volume_container .fluid_control_volume .fluid_control_volume_currentpos {
     background-color: #FFFFFF;
 }
 
-.vast_controls_container .vast_controls_progress_container .vast_controls_progress .vast_controls_currentpos {
+.fluid_controls_container .fluid_controls_progress_container .fluid_controls_progress .fluid_controls_currentpos {
     right: -4px;
     z-index: 5;
 }
 
-.vast_controls_container .vast_controls_right .vast_control_volume_container .vast_control_volume .vast_control_volume_currentpos,
-.vast_controls_container .vast_controls_progress_container .vast_controls_progress .vast_controls_currentpos {
+.fluid_controls_container .fluid_controls_right .fluid_control_volume_container .fluid_control_volume .fluid_control_volume_currentpos,
+.fluid_controls_container .fluid_controls_progress_container .fluid_controls_progress .fluid_controls_currentpos {
     width: 10px;
     height: 10px;
     position: absolute;
@@ -247,119 +247,119 @@ _:-ms-lang(x),
     border-radius: 5px;
 }
 
-.vast_controls_container.no_volume_controls .vast_controls_right {
+.fluid_controls_container.no_volume_controls .fluid_controls_right {
     width: 24px;
 }
 
-.vast_controls_container.no_volume_controls .vast_controls_right .vast_control_volume_container,
-.vast_controls_container.no_volume_controls .vast_controls_right .vast_control_mute {
+.fluid_controls_container.no_volume_controls .fluid_controls_right .fluid_control_volume_container,
+.fluid_controls_container.no_volume_controls .fluid_controls_right .fluid_control_mute {
     display: none;
 }
 
-.vast_controls_container.no_volume_controls .vast_controls_progress_container {
+.fluid_controls_container.no_volume_controls .fluid_controls_progress_container {
     right: 35px;
 }
 
-.vast_controls_container .vast_button {
+.fluid_controls_container .fluid_button {
     border-radius: 2px;
 }
 
-.vast_controls_container .vast_button:not(.vast_button_disabled):hover {
+.fluid_controls_container .fluid_button:not(.fluid_button_disabled):hover {
     background-color: #404040;
 }
 
-.vast_controls_container .vast_button_disabled:hover {
+.fluid_controls_container .fluid_button_disabled:hover {
     cursor: default;
 }
 
-.vast_controls_container .vast_button,
-.vast_controls_container .vast_slider {
+.fluid_controls_container .fluid_button,
+.fluid_controls_container .fluid_slider {
     cursor: pointer;
 }
 
-.vast_controls_container div i,
-.vast_controls_container div div {
+.fluid_controls_container div i,
+.fluid_controls_container div div {
     display: block;
 }
 
-.vast_controls_container .vast_controls_left i,
-.vast_controls_container .vast_controls_left div {
+.fluid_controls_container .fluid_controls_left i,
+.fluid_controls_container .fluid_controls_left div {
     float: left;
 }
 
-.vast_controls_container .vast_controls_right i,
-.vast_controls_container .vast_controls_right div {
+.fluid_controls_container .fluid_controls_right i,
+.fluid_controls_container .fluid_controls_right div {
     float: right;
 }
 
-.vast_controls_container .vast_button_disabled {
+.fluid_controls_container .fluid_button_disabled {
     color: #808080;
     cursor: auto;
 }
 
 /*Mobile Layout*/
-.vast_video_wrapper.mobile .vast_controls_container {
+.fluid_video_wrapper.mobile .fluid_controls_container {
     height: 48px;
 }
 
-.vast_video_wrapper.mobile .vast_controls_container .vast_controls_left,
-.vast_video_wrapper.mobile .vast_controls_container .vast_controls_right {
+.fluid_video_wrapper.mobile .fluid_controls_container .fluid_controls_left,
+.fluid_video_wrapper.mobile .fluid_controls_container .fluid_controls_right {
     height: 48px;
 }
 
-.vast_video_wrapper.mobile .vast_controls_container .vast_controls_left {
+.fluid_video_wrapper.mobile .fluid_controls_container .fluid_controls_left {
     width: 48px;
 }
 
-.vast_video_wrapper.mobile .vast_controls_container i {
+.fluid_video_wrapper.mobile .fluid_controls_container i {
     width: 48px;
     font-size: 48px;
 }
 
-.vast_video_wrapper.mobile .vast_controls_container .vast_controls_progress_container {
+.fluid_video_wrapper.mobile .fluid_controls_container .fluid_controls_progress_container {
     height: 48px;
     left: 70px;
     right: 208px;
 }
 
-.vast_video_wrapper.mobile .vast_controls_container.no_volume_controls .vast_controls_progress_container {
+.fluid_video_wrapper.mobile .fluid_controls_container.no_volume_controls .fluid_controls_progress_container {
     right: 70px;
 }
 
-.vast_video_wrapper.mobile .vast_controls_container.no_volume_controls .vast_controls_right {
+.fluid_video_wrapper.mobile .fluid_controls_container.no_volume_controls .fluid_controls_right {
     width: 48px;
 }
 
-.vast_video_wrapper.mobile .vast_controls_container .vast_controls_progress_container .vast_controls_progress,
-.vast_video_wrapper.mobile .vast_controls_container .vast_controls_progress_container .vast_controls_progress .vast_controls_currentprogress {
+.fluid_video_wrapper.mobile .fluid_controls_container .fluid_controls_progress_container .fluid_controls_progress,
+.fluid_video_wrapper.mobile .fluid_controls_container .fluid_controls_progress_container .fluid_controls_progress .fluid_controls_currentprogress {
     border-radius: 4px;
     height: 8px;
 }
 
-.vast_video_wrapper.mobile .vast_controls_container .vast_controls_progress_container .vast_controls_progress {
+.fluid_video_wrapper.mobile .fluid_controls_container .fluid_controls_progress_container .fluid_controls_progress {
     border-radius: 4px;
     height: 8px;
     top: 20px;
 }
 
-.vast_video_wrapper.mobile .vast_controls_container .vast_controls_right .vast_control_volume_container .vast_control_volume .vast_control_volume_currentpos,
-.vast_video_wrapper.mobile .vast_controls_container .vast_controls_progress_container .vast_controls_progress .vast_controls_currentpos {
+.fluid_video_wrapper.mobile .fluid_controls_container .fluid_controls_right .fluid_control_volume_container .fluid_control_volume .fluid_control_volume_currentpos,
+.fluid_video_wrapper.mobile .fluid_controls_container .fluid_controls_progress_container .fluid_controls_progress .fluid_controls_currentpos {
     border-radius: 10px;
     height: 20px;
     top: -6px;
     width: 20px;
 }
 
-.vast_video_wrapper.mobile .vast_controls_container .vast_controls_right {
+.fluid_video_wrapper.mobile .fluid_controls_container .fluid_controls_right {
     width: 198px;
 }
 
-.vast_video_wrapper.mobile .vast_controls_container .vast_controls_right .vast_control_volume_container {
+.fluid_video_wrapper.mobile .fluid_controls_container .fluid_controls_right .fluid_control_volume_container {
     height: 48px;
     margin: 0 10px;
 }
 
-.vast_video_wrapper.mobile .vast_controls_container .vast_controls_right .vast_control_volume_container .vast_control_volume {
+.fluid_video_wrapper.mobile .fluid_controls_container .fluid_controls_right .fluid_control_volume_container .fluid_control_volume {
     border-radius: 4px;
     height: 8px;
     margin-top: 20px;
