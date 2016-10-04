@@ -1,8 +1,8 @@
-.vast_video_wrapper{
+.fluid_video_wrapper{
 	position:relative;
 	display: inline-block;
 }
-.vast_video_wrapper video {
+.fluid_video_wrapper video {
 	position:relative;
 	background-color: #000000;
     display: block;
@@ -64,12 +64,12 @@
 }
 
 /*Mobile Layout*/
-.vast_video_wrapper.mobile .skip_button {
+.fluid_video_wrapper.mobile .skip_button {
     height: 48px;
 }
 
-.vast_video_wrapper.mobile .skip_button,
-.vast_video_wrapper.mobile .skip_button a {
+.fluid_video_wrapper.mobile .skip_button,
+.fluid_video_wrapper.mobile .skip_button a {
     font-size: 20px;
     line-height: 47px;
 }
